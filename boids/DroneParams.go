@@ -1,4 +1,4 @@
-package go_boids
+package boids
 
 type Position struct {
     X, Y, Z float64                 // 3D position of the drone
