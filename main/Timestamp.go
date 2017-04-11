@@ -1,20 +1,20 @@
 package main
 
-type VectorTimestamp struct {
+type VectorTime struct {
     processTime map[string]int
 }
 
-func (v VectorTimestamp) increment(name string) {
+func (v VectorTime) increment(name string) {
     v.processTime[name] = v.processTime[name] + 1;
 }
 
-func (v VectorTimestamp) update(timestamp VectorTimestamp) {
+func (v VectorTime) update(timestamp VectorTime) {
     for key, value := range timestamp.processTime {
         v.processTime[key] = int(max(v.processTime[key], value))
     }
 }
 
-func (v VectorTimestamp) compare(timestamp VectorTimestamp) int {
+func (v VectorTime) compare(timestamp VectorTime) int {
     allGreater, allSmaller := true, true
 
     for key, value := range v.processTime {

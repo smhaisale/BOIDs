@@ -8,6 +8,7 @@ type TcpMessage struct {
     SeqNum          int             `json: "seqNum"`
     Duplicate       bool            `json: "duplicate"`
     Type            string          `json: "type"`
+    Timestamp       VectorTime      `json: "vectorTimestamp"`
     Data            MessageData     `json: "data"`
     MulticastData   MulticastData   `json: "multicastData"`
 }
