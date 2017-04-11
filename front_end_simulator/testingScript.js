@@ -10,18 +10,21 @@ var requestAnimFrame = window.requestAnimationFrame || window.webkitRequestAnima
 // bind to window onload event
 window.addEventListener('load', onloadHandler, false);
 var bitmaps = [];
-var newX = 1;
 var scene = new Phoria.Scene();
 var sphereList = [];
 
 var currentX = 0;
 var currentY = 2;
 var currentZ = 0;
-var changeX = 0;
-var changeY = 2;
-var changeZ = 0;
+var newX = 0;
+var newY = 2;
+var newZ = 0;
+var dX = 0;
+var dY = 0;
+var dZ = 0;
 
-var speed = 0.05;
+var speed = 0.01;
+var pause = true;
 
 function createSphere(size, x, y, z) {
 
@@ -51,10 +54,14 @@ function createSphere(size, x, y, z) {
 function makeSphereWithValue() {
       var input = document.getElementById('values');
       var data = input.value.split(",");
-      console.log("making sphere of size " + data[0] + " at " +  data[1] + "," + data[2] + "," + data[3]);
-      changeX = data[1];
-      changeY = data[2];
-      changeZ = data[3];
+      console.log("making sphere at " +  data[0] + "," + data[1] + "," + data[2]);
+      newX = data[0];
+      newY = data[1];
+      newZ = data[2];
+      dX = (newX - currentX) * speed;
+      dY = (newY - currentY) * speed;
+      dZ = (newZ - currentZ) * speed;
+      pause = false;
       //var sphere = createSphere(parseFloat(data[0]), parseInt(data[1]), parseInt(data[2]), parseInt(data[3]));
       //sphereList.push(sphereList);
       //scene.graph.push(sphere);
@@ -123,26 +130,26 @@ function init()
 
    var animateX = 0.0;
    var animateY = 0.0;
-   var pause = false;
    var fnAnimate = function() {
-
-      if ((currentX == changeX) && (currentY == changeY) && (currentZ == changeZ)) {
-         pause = true;
-      } else {
-         console.log(currentY + ", " + changeY);
-         pause = false;
-      }
-
-
       if (!pause)
       {
-         sphere.translateX((changeX - currentX) * speed);
-         sphere.translateY((changeY - currentY) * speed);
-         sphere.translateZ((changeZ - currentZ) * speed);
+         sphere.translateX(dX);
+         sphere.translateY(dY);
+         sphere.translateZ(dZ);
 
-         currentX += (changeX - currentX) * speed;
-         currentY += (changeY - currentY) * speed;
-         currentZ += (changeZ - currentZ) * speed;
+         currentX += dX;
+         currentY += dY;
+         currentZ += dZ;
+
+         console.log(currentX + ", " + currentY + ", " + currentZ);
+         console.log(newX + ", " + newY + ", " + newZ);
+         console.log((currentX - newX) + ", " + (currentY - newY) + ", " + (currentZ - newZ));
+
+         if ((Math.abs(currentX - newX) < 0.001) && (Math.abs(currentY - newY) < 0.001) && (Math.abs(currentZ - newZ) < 0.001)) {
+            pause = true;
+         } else {
+            pause = false;
+         }
          //sphere.translateY(0.01);
          // rotate local matrix of the cube
          // cube.rotateY(0.5*Phoria.RADIANS);
@@ -208,11 +215,12 @@ function init()
             scene.graph.push(sphere);
             console.log("making sphere of size 0.5 at " +  newX + ",0,0");
             break;
+            **/
          case 27: // ESC
-
+            console.log("pausing");
             pause = !pause;
             break;
-           
+           /**
          case 87: // W
             // move forward along current heading
             fnPositionLookAt(vec3.fromValues(0,0,1), heading, lookAt);
