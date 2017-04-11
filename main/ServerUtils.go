@@ -23,9 +23,23 @@ func toJsonString(message TcpMessage) string {
     return string(msg)
 }
 
+func fromJsonString(object interface{}, message string) error {
+    err := json.Unmarshal([]byte(message), object)
+    if err != nil {
+        log.Fatal(err)
+        return err
+    }
+    return nil
+}
+
 func main() {
     var t = TcpMessage{[]Drone{sampleDrone, sampleDrone, sampleDrone}}
-    fmt.Println(toJsonString(t))
+    var json = toJsonString(t)
+    var t2 = new(TcpMessage)
+    fromJsonString(t2, json)
+    fmt.Println(t)
+    fmt.Println(json)
+    fmt.Println(*t2)
 }
 
 func getRequestBody(msg interface {}, req *http.Request) interface{} {

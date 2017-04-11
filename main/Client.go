@@ -5,7 +5,6 @@ import (
     "bufio"
     "os"
     "fmt"
-    "encoding/json"
 )
 
 var connections = make(map[string]Connection)
@@ -30,7 +29,7 @@ func listen(address string) error {
         if error != nil {
             break
         }
-
+        queue <- fromJsonString(message)
     }
     return error
 }
