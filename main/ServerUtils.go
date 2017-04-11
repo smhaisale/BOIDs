@@ -8,12 +8,6 @@ import (
     "fmt"
 )
 
-// Message structure used for TCP connections between drones
-// Contains list of drones
-type TcpMessage struct {
-    Drones      []Drone       `json: "drone"`
-}
-
 // All contained variable names must begin with a capital letter to be visible by JSONWrapper
 func toJsonString(message TcpMessage) string {
     msg, err := json.Marshal(message)
