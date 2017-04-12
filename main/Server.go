@@ -1,31 +1,39 @@
 package main
 
 import (
-    "net"
-    "fmt"
-    "bufio"
-    "strings" // only needed below for sample processing
+	"encoding/gob"
+	"fmt"
+	"net"
 )
 
-func main() {
+var recvQueue = make(chan TcpMessage)
 
-    fmt.Println("Launching server...")
+func handleConnection(ln net.Listener) {
+	for {
+		conn, err := ln.Accept()
+		fmt.Println("accept")
+		if err != nil {
+		}
+		decoder := gob.NewDecoder(conn)
+		msg := &TcpMessage{}
+		decoder.Decode(msg)
+		fmt.Println(*msg)
+		if msg != nil {
+			recvQueue <- *msg
+		}
+		conn.Close()
+	}
+}
+func ReceiveSocket() TcpMessage {
+	return <-recvQueue
+}
 
-    // listen on all interfaces
-    ln, _ := net.Listen("tcp", ":8081")
-
-    // accept connection on port
-    conn, _ := ln.Accept()
-
-    // run loop forever (or until ctrl-c)
-    for {
-        // will listen for message to process ending in newline (\n)
-        message, _ := bufio.NewReader(conn).ReadString('\n')
-        // output message received
-        fmt.Print("UIMessage Received:", string(message))
-        // sample process for string received
-        newmessage := strings.ToUpper(message)
-        // send new string back to client
-        conn.Write([]byte(newmessage + "\n"))
-    }
+func Listen(port string) {
+	ln, err := net.Listen("tcp", ":"+port)
+	fmt.Println("listen")
+	if err != nil {
+		return
+	}
+	go handleConnection(ln)
+	fmt.Println("done")
 }
