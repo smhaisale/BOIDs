@@ -38,6 +38,7 @@ type DroneType struct {
 
 // Drone object with all attributes for one running drone
 type Drone struct {
+    ID      string
     Pos     Position
     Type    DroneType
     Speed   Speed
@@ -58,4 +59,4 @@ var sampleDimension = Dimensions{ 1, 1, 1}
 
 var sampleDroneType = DroneType { "type1", "Simple sample drone type", sampleDimension, Dimensions{10, 10, 10}, Speed{10, 10, 10}}
 
-var sampleDrone = Drone {samplePosition, sampleDroneType, sampleSpeed}
+var sampleDrone = Drone {"drone1", samplePosition, sampleDroneType, sampleSpeed}
