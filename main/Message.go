@@ -25,3 +25,11 @@ type MulticastData struct {
     GroupSeqNum     int             `json: "groupSeqNum"`
     GroupName       string          `json: "groupName"`
 }
+
+var sampleMulticastData = MulticastData {"multicastSource", "multicastDestination",
+    1, "groupName"}
+
+var sampleMessageData = MessageData {[]Drone {sampleDrone, sampleDrone, sampleDrone} }
+
+var sampleTcpMessage = TcpMessage {"source", "destination", 1, false, "messageType",
+    sampleTimestamp, sampleMessageData, sampleMulticastData}

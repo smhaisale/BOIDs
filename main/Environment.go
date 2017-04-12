@@ -6,8 +6,8 @@ import (
     "github.com/gorilla/websocket"
 )
 
-var clients = make(map[*websocket.Conn]bool) // connected clients
-var broadcast = make(chan UIMessage)         // broadcast channel
+var clients = make(map[*websocket.Conn]bool)        // connected clients
+var broadcast = make(chan UIMessage)                // broadcast channel
 
 // Configure the upgrader
 var upgrader = websocket.Upgrader {
@@ -41,6 +41,7 @@ func handleDroneRequest(w http.ResponseWriter, r *http.Request) {
     msg := new(UIMessage)
     getRequestBody(msg, r)
     log.Println(msg)
+    w.Write([]byte(toJsonString(sampleDrone)))
 }
 
 

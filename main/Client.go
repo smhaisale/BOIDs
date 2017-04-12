@@ -15,7 +15,6 @@ type Connection struct {
     Address string
 }
 
-
 func connect(name, address string) {
     go listen(address)
 
@@ -29,7 +28,8 @@ func listen(address string) error {
         if error != nil {
             break
         }
-        queue <- fromJsonString(message)
+        object := new(TcpMessage)
+        queue <- fromJsonString(object, message)
     }
     return error
 }

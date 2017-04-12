@@ -5,7 +5,7 @@ type VectorTime struct {
 }
 
 func (v VectorTime) increment(name string) {
-    v.processTime[name] = v.processTime[name] + 1;
+    v.processTime[name]  = v.processTime[name] + 1;
 }
 
 func (v VectorTime) update(timestamp VectorTime) {
@@ -28,6 +28,9 @@ func (v VectorTime) compare(timestamp VectorTime) int {
         default: return 0
     }
 }
+
+//TODO: Put some initial values
+var sampleTimestamp = VectorTime { map[string]int {}}
 
 func max(list ...int) int {
     max := list[0]

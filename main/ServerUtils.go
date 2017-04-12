@@ -9,12 +9,12 @@ import (
 )
 
 // All contained variable names must begin with a capital letter to be visible by JSONWrapper
-func toJsonString(message TcpMessage) string {
-    msg, err := json.Marshal(message)
+func toJsonString(object interface{}) string {
+    json, err := json.Marshal(object)
     if err != nil {
         log.Fatal(err)
     }
-    return string(msg)
+    return string(json)
 }
 
 func fromJsonString(object interface{}, message string) error {
@@ -27,9 +27,9 @@ func fromJsonString(object interface{}, message string) error {
 }
 
 func main() {
-    var t = TcpMessage{[]Drone{sampleDrone, sampleDrone, sampleDrone}}
+    var t = sampleTcpMessage
     var json = toJsonString(t)
-    var t2 = new(TcpMessage)
+    var t2 = new(MessageData)
     fromJsonString(t2, json)
     fmt.Println(t)
     fmt.Println(json)
