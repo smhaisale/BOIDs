@@ -3,27 +3,27 @@ package main
 // Message structure used for TCP connections between drones
 // Contains message metadata and payload
 type TcpMessage struct {
-    Source          string          `json: "source"`
-    Destination     string          `json: "destination"`
-    SeqNum          int             `json: "seqNum"`
-    Duplicate       bool            `json: "duplicate"`
-    Type            string          `json: "type"`
-    Timestamp       VectorTime      `json: "vectorTimestamp"`
-    Data            MessageData     `json: "data"`
-    MulticastData   MulticastData   `json: "multicastData"`
+    source          string          `json: "source"`
+    destination     string          `json: "destination"`
+    seqNum          int             `json: "seqNum"`
+    duplicate       bool            `json: "duplicate"`
+    msgType            string          `json: "type"`
+    timestamp       VectorTime      `json: "vectorTimestamp"`
+    data            MessageData     `json: "data"`
+    multicastData   MulticastData   `json: "multicastData"`
 }
 
 // Contains message payload
 type MessageData struct {
-    Drones          []Drone         `json: "drones"`
+    drones          []Drone         `json: "drones"`
 }
 
 // Contains metadata specific to multicast messages
 type MulticastData struct {
-    Source          string          `json: "source"`
-    Destination     string          `json: "destination"`
-    GroupSeqNum     int             `json: "groupSeqNum"`
-    GroupName       string          `json: "groupName"`
+    source          string          `json: "source"`
+    destination     string          `json: "destination"`
+    groupSeqNum     int             `json: "groupSeqNum"`
+    groupName       string          `json: "groupName"`
 }
 
 var sampleMulticastData = MulticastData {"multicastSource", "multicastDestination",
