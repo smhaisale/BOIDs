@@ -41,7 +41,17 @@ func handleDroneRequest(w http.ResponseWriter, r *http.Request) {
     msg := new(UIMessage)
     getRequestBody(msg, r)
     log.Println(msg)
-    w.Write([]byte(toJsonString(sampleDrone)))
+
+    // Get drone configuration from local cache instead of creating mock data.
+    drones := []Drone {sampleDrone, sampleDrone, sampleDrone}
+    drones[0].ID = "drone1"
+    drones[0].Pos = Position {1, 1, 1}
+    drones[1].ID = "drone2"
+    drones[1].Pos = Position {2, 2, 2}
+    drones[2].ID = "drone3"
+    drones[2].Pos = Position {3, 3, 3}
+
+    w.Write([]byte(toJsonString(drones)))
 }
 
 
