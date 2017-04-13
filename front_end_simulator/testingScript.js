@@ -9,6 +9,14 @@ var requestAnimFrame = window.requestAnimationFrame || window.webkitRequestAnima
 
 // bind to window onload event
 window.addEventListener('load', onloadHandler, false);
+
+var testData = [{"ID":"drone1","pos":{"X":1,"Y":1,"Z":1},"type":{"TypeId":"type1","TypeDescription":"Simple sample drone type","Size":{"DX":1,"DY":1,"DZ":1},"MaxRange":{"DX":10,"DY":10,"DZ":10},"MaxSpeed":{"VX":10,"VY":10,"VZ":10}},"speed":{"VX":2,"VY":1,"VZ":-1}},
+                {"ID":"drone2","pos":{"X":2,"Y":2,"Z":2},"type":{"TypeId":"type1","TypeDescription":"Simple sample drone type","Size":{"DX":1,"DY":1,"DZ":1},"MaxRange":{"DX":10,"DY":10,"DZ":10},"MaxSpeed":{"VX":10,"VY":10,"VZ":10}},"speed":{"VX":2,"VY":1,"VZ":-1}},
+                {"ID":"drone3","pos":{"X":3,"Y":3,"Z":3},"type":{"TypeId":"type1","TypeDescription":"Simple sample drone type","Size":{"DX":1,"DY":1,"DZ":1},"MaxRange":{"DX":10,"DY":10,"DZ":10},"MaxSpeed":{"VX":10,"VY":10,"VZ":10}},"speed":{"VX":2,"VY":1,"VZ":-1}}];
+
+var testData2 = [{"ID":"drone1","pos":{"X":-1,"Y":-1,"Z":-1},"type":{"TypeId":"type1","TypeDescription":"Simple sample drone type","Size":{"DX":1,"DY":1,"DZ":1},"MaxRange":{"DX":10,"DY":10,"DZ":10},"MaxSpeed":{"VX":10,"VY":10,"VZ":10}},"speed":{"VX":2,"VY":1,"VZ":-1}},
+                {"ID":"drone2","pos":{"X":-2,"Y":-2,"Z":-2},"type":{"TypeId":"type1","TypeDescription":"Simple sample drone type","Size":{"DX":1,"DY":1,"DZ":1},"MaxRange":{"DX":10,"DY":10,"DZ":10},"MaxSpeed":{"VX":10,"VY":10,"VZ":10}},"speed":{"VX":2,"VY":1,"VZ":-1}},
+                {"ID":"drone3","pos":{"X":-3,"Y":-3,"Z":-3},"type":{"TypeId":"type1","TypeDescription":"Simple sample drone type","Size":{"DX":1,"DY":1,"DZ":1},"MaxRange":{"DX":10,"DY":10,"DZ":10},"MaxSpeed":{"VX":10,"VY":10,"VZ":10}},"speed":{"VX":2,"VY":1,"VZ":-1}}];
 var bitmaps = [];
 var scene = new Phoria.Scene();
 var sphereList = [];
@@ -78,6 +86,7 @@ function makeSphereWithValue() {
 function formSquare() {
 
    // insert some math stuff to form shapes.
+   /**
    var x = 0;
    var y = 0;
    var z = 0;
@@ -99,21 +108,60 @@ function formSquare() {
          y = -2;
          z = 0;
       }
-      droneList[i].newX = x;
-      droneList[i].newY = y;
-      droneList[i].newZ = z;
-      droneList[i].dX = (droneList[i].newX - droneList[i].currentX) * droneList[i].speed;
-      droneList[i].dY = (droneList[i].newY - droneList[i].currentY) * droneList[i].speed;
-      droneList[i].dZ = (droneList[i].newZ - droneList[i].currentZ) * droneList[i].speed;
+      droneList[i].setCoordinate(x,y,z);
       pause = false;
+   }
+   **/
+   updateDronePositions();
+}
 
+function jsonCallback(json) {
+   console.log(json);
+}
+
+function loadDroneData() {
+   // insert some call to fetch the initial data
+   for (var i = 0; i < testData.length; i++) {
+      var obj = testData[i];
+      var drone = new Drone(obj.ID,obj.pos.X,obj.pos.Y,obj.pos.Z);
+      var sphere = createSphere(drone.size, drone.currentX, drone.currentY, drone.currentZ);
+      sphereList.push(sphere);
+      scene.graph.push(sphere);
+
+      drone.sphere = sphere;
+      droneList.push(drone);
    }
 }
 
+function updateDronePositions() {
+   for (var i = 0; i < testData2.length; i++) {
+      var currentDrone = droneList[i];
+      var objDrone = testData2[i];
+      if (currentDrone.X != objDrone.pos.X || currentDrone.Y != objDrone.pos.Y || currentDrone.Z != objDrone.pos.Z  ) {
+         currentDrone.setCoordinate(objDrone.pos.X,objDrone.pos.Y,objDrone.pos.Z);
+      }
+   }
+   pause = false;
+}
 
 function onloadHandler()
 {
+   /**
+   $.ajax({
+     url: 'http://localhost:18842/drones',
+     dataType: "jsonp"
+   });
+   
    console.log("onloadHandler");
+
+   var script = document.createElement('script');
+   script.src = 'http://localhost:18842/drones?callback=hooray';
+   document.body.appendChild(script);
+   **/
+
+   loadDroneData();
+       // get conference list
+
    // get the images loading
    var loader = new Phoria.Preloader();
    for (var i=0; i<6; i++)
@@ -126,6 +174,7 @@ function onloadHandler()
 function init()
 {
    console.log("init()");
+
    // get the canvas DOM element and the 2D drawing context
    var canvas = document.getElementById('canvas');
    
@@ -161,6 +210,7 @@ function init()
    // added sphere
    //for (var i = 0; i < 4; i++) {
 
+      /**
    for (var i = 0; i < 4; i++) {
       var drone = new Drone(0.5,i,0,0);
       var sphere = createSphere(drone.size, drone.currentX, drone.currentY, drone.currentZ);
@@ -171,6 +221,8 @@ function init()
       droneList.push(drone);
 
    }
+   **/
+   
 
    //}
 

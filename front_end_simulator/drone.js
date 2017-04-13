@@ -1,5 +1,6 @@
-function Drone(size,x,y,z) {
-   this.size = size;
+function Drone(id,x,y,z) {
+   this.ID;
+   this.size = 0.5;
    this.currentX = x;
    this.currentY = y;
    this.currentZ = z;
