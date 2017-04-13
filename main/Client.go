@@ -2,7 +2,7 @@ package main
 
 import (
 	"net"
-	"encoding/gob"
+	"fmt"
 )
 
 var nodeConnMap = make(map[string]net.Conn)
@@ -10,7 +10,10 @@ var nodeConnMap = make(map[string]net.Conn)
 func connect(name string) {
 	_, ok := nodeConnMap[name]
 	if !ok {
-		conn, _ := net.Dial("tcp", NodeMap[name].address+":"+NodeMap[name].port)
+		conn, err := net.Dial("tcp", NodeMap[name].address+":"+NodeMap[name].port)
+		if err != nil {
+			fmt.Println(err)
+		}
 		nodeConnMap[name] = conn
 	}
 }
@@ -18,7 +21,5 @@ func connect(name string) {
 func SendSocket(message TcpMessage) {
 	dest := message.Destination
 	connect(dest)
-	enc := gob.NewEncoder(nodeConnMap[dest])
-	enc.Encode(message)
-	nodeConnMap[dest].Close()
+	fmt.Fprint(nodeConnMap[dest], toJsonString(message)+"\n")
 }
