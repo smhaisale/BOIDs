@@ -113,12 +113,9 @@ function formSquare() {
       droneList[i].setCoordinate(x,y,z);
       pause = false;
    }
+    updateDronePositions();
    **/
-   updateDronePositions();
-}
-
-function jsonCallback(json) {
-   console.log(json);
+   pause = !pause;
 }
 
 function loadDroneData() {
@@ -142,26 +139,33 @@ function loadDroneData() {
         droneList.push(drone);
     }
 
+    updateDronePositions();
+
 }
 
 function updateDronePositions() {
 
-    $.ajax({
-        async: false,
-        type: 'GET',
-        dataType: 'json',
-        url: 'http://localhost:18842/drones',
-        success: function(data) { testData2 = data; }
-    });
+    if (!pause) {
+        $.ajax({
+            async: false,
+            type: 'GET',
+            dataType: 'json',
+            url: 'http://localhost:18842/drones',
+            success: function (data) {
+                testData2 = data;
+            }
+        });
 
-   for (var i = 0; i < testData2.length; i++) {
-       var currentDrone = droneList[i];
-       var objDrone = testData2[i];
-       if (currentDrone.X != objDrone.pos.X || currentDrone.Y != objDrone.pos.Y || currentDrone.Z != objDrone.pos.Z  ) {
-          currentDrone.setCoordinate(objDrone.pos.X,objDrone.pos.Y,objDrone.pos.Z);
-       }
-   }
-   pause = false;
+        for (var i = 0; i < testData2.length; i++) {
+            var currentDrone = droneList[i];
+            var objDrone = testData2[i];
+            if (currentDrone.X != objDrone.pos.X || currentDrone.Y != objDrone.pos.Y || currentDrone.Z != objDrone.pos.Z) {
+                currentDrone.setCoordinate(objDrone.pos.X, objDrone.pos.Y, objDrone.pos.Z);
+            }
+        }
+    }
+
+   setTimeout(updateDronePositions, 1000);
 }
 
 function onloadHandler()
