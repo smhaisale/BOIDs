@@ -12,6 +12,7 @@ window.addEventListener('load', onloadHandler, false);
 var bitmaps = [];
 var scene = new Phoria.Scene();
 var sphereList = [];
+var droneList = [];
 
 var currentX = 0;
 var currentY = 2;
@@ -25,6 +26,8 @@ var dZ = 0;
 
 var speed = 0.01;
 var pause = true;
+
+var drone1 = new Drone();
 
 function createSphere(size, x, y, z) {
 
@@ -54,18 +57,60 @@ function createSphere(size, x, y, z) {
 function makeSphereWithValue() {
       var input = document.getElementById('values');
       var data = input.value.split(",");
-      console.log("making sphere at " +  data[0] + "," + data[1] + "," + data[2]);
-      newX = data[0];
-      newY = data[1];
-      newZ = data[2];
-      dX = (newX - currentX) * speed;
-      dY = (newY - currentY) * speed;
-      dZ = (newZ - currentZ) * speed;
-      pause = false;
+      //console.log("making sphere at " +  data[0] + "," + data[1] + "," + data[2]);
+      for (var i = 0; i < droneList.length; i++) {
+         droneList[i].newX = data[0];
+         droneList[i].newY = data[1];
+         droneList[i].newZ = data[2];
+         droneList[i].dX = (droneList[i].newX - droneList[i].currentX) * droneList[i].speed;
+         droneList[i].dY = (droneList[i].newY - droneList[i].currentY) * droneList[i].speed;
+         droneList[i].dZ = (droneList[i].newZ - droneList[i].currentZ) * droneList[i].speed;
+         pause = false;
+
+      }
+
+
       //var sphere = createSphere(parseFloat(data[0]), parseInt(data[1]), parseInt(data[2]), parseInt(data[3]));
       //sphereList.push(sphereList);
       //scene.graph.push(sphere);
 }
+
+function formSquare() {
+
+   // insert some math stuff to form shapes.
+   var x = 0;
+   var y = 0;
+   var z = 0;
+   for (var i = 0; i < droneList.length; i++) {
+      if (i === 0) {
+         x = -2;
+         y = 2;
+         z = 0;
+      } else if (i === 1) {
+         x = 2;
+         y = 2;
+         z = 0;
+      } else if (i === 2) {
+         x = -2;
+         y = -2;
+         z = 0;
+      } else if (i === 3) {
+         x = 2;
+         y = -2;
+         z = 0;
+      }
+      droneList[i].newX = x;
+      droneList[i].newY = y;
+      droneList[i].newZ = z;
+      droneList[i].dX = (droneList[i].newX - droneList[i].currentX) * droneList[i].speed;
+      droneList[i].dY = (droneList[i].newY - droneList[i].currentY) * droneList[i].speed;
+      droneList[i].dZ = (droneList[i].newZ - droneList[i].currentZ) * droneList[i].speed;
+      pause = false;
+
+   }
+}
+
+
 function onloadHandler()
 {
    console.log("onloadHandler");
@@ -108,47 +153,54 @@ function init()
    }));
 
 
-   var c = Phoria.Util.generateUnitCube();
-   var cube = Phoria.Entity.create({
-      points: c.points,
-      edges: c.edges,
-      polygons: c.polygons
-   });
-   for (var i=0; i<6; i++)
-   {
-      cube.textures.push(bitmaps[i]);
-      cube.polygons[i].texture = i;
-   }
    //scene.graph.push(cube);
    scene.graph.push(Phoria.DistantLight.create({
       direction: {x:0, y:-0.5, z:1}
    }));
 
    // added sphere
-   var sphere = createSphere(0.5, 0, 2, 0);
-   scene.graph.push(sphere);
+   //for (var i = 0; i < 4; i++) {
+
+   for (var i = 0; i < 4; i++) {
+      var drone = new Drone(0.5,i,0,0);
+      var sphere = createSphere(drone.size, drone.currentX, drone.currentY, drone.currentZ);
+      sphereList.push(sphere);
+      scene.graph.push(sphere);
+
+      drone.sphere = sphere;
+      droneList.push(drone);
+
+   }
+
+   //}
 
    var animateX = 0.0;
    var animateY = 0.0;
    var fnAnimate = function() {
       if (!pause)
       {
-         sphere.translateX(dX);
-         sphere.translateY(dY);
-         sphere.translateZ(dZ);
+         for (var i = 0; i < droneList.length; i++) {
+            var drone = droneList[i];
+            var sphere = drone.sphere;
+            sphere.translateX(drone.dX);
+            sphere.translateY(drone.dY);
+            sphere.translateZ(drone.dZ);
 
-         currentX += dX;
-         currentY += dY;
-         currentZ += dZ;
+            drone.currentX += drone.dX;
+            drone.currentY += drone.dY;
+            drone.currentZ += drone.dZ;
 
-         console.log(currentX + ", " + currentY + ", " + currentZ);
-         console.log(newX + ", " + newY + ", " + newZ);
-         console.log((currentX - newX) + ", " + (currentY - newY) + ", " + (currentZ - newZ));
+            //console.log(currentX + ", " + currentY + ", " + currentZ);
+            //console.log(newX + ", " + newY + ", " + newZ);
+            //console.log((currentX - newX) + ", " + (currentY - newY) + ", " + (currentZ - newZ));
 
-         if ((Math.abs(currentX - newX) < 0.001) && (Math.abs(currentY - newY) < 0.001) && (Math.abs(currentZ - newZ) < 0.001)) {
-            pause = true;
-         } else {
-            pause = false;
+            if ((Math.abs(drone.currentX - drone.newX) < 0.001) && (Math.abs(drone.currentY - drone.newY) < 0.001) && (Math.abs(drone.currentZ - drone.newZ) < 0.001)) {
+               drone.dX = 0;
+               drone.dY = 0;
+               drone.dZ = 0;
+            } else {
+               //pause = false;
+            }
          }
          //sphere.translateY(0.01);
          // rotate local matrix of the cube
