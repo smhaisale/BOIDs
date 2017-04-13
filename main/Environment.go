@@ -4,6 +4,7 @@ import (
     "log"
     "net/http"
     "github.com/gorilla/websocket"
+    "math/rand"
 )
 
 var clients = make(map[*websocket.Conn]bool)        // connected clients
@@ -37,6 +38,14 @@ func main() {
     }
 }
 
+func getRandomCoordinates () (x, y, z float64) {
+    x = rand.Float64() * 5.0;
+    y = rand.Float64() * 5.0;
+    z = rand.Float64() * 5.0;
+    log.Println("Random coordinates: ", x, y, z)
+    return
+}
+
 func handleDroneRequest(w http.ResponseWriter, r *http.Request) {
     msg := new(UIMessage)
     getRequestBody(msg, r)
@@ -45,12 +54,16 @@ func handleDroneRequest(w http.ResponseWriter, r *http.Request) {
     // Get drone configuration from local cache instead of creating mock data.
     drones := []Drone {sampleDrone, sampleDrone, sampleDrone}
     drones[0].ID = "drone1"
-    drones[0].Pos = Position {1, 1, 1}
+    x, y, z := getRandomCoordinates()
+    drones[0].Pos = Position {x, y, z}
+    x, y, z = getRandomCoordinates()
     drones[1].ID = "drone2"
-    drones[1].Pos = Position {2, 2, 2}
+    drones[1].Pos = Position {x, y, z}
+    x, y, z = getRandomCoordinates()
     drones[2].ID = "drone3"
-    drones[2].Pos = Position {3, 3, 3}
+    drones[2].Pos = Position {x, y, z}
 
+    w.Header().Set("Access-Control-Allow-Origin", "*")
     w.Write([]byte(toJsonString(drones)))
 }
 
