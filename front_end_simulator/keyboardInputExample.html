@@ -17,11 +17,22 @@
    <body style="background-color: #bfbfbf">
       <canvas id="canvas" width="768" height="512" style="background-color: #eee"></canvas>
       <form>
-      Enter size, x, y, z, of sphere<br>
-        <input id="values" type="text" ><br>
-          <button name="data" type="button" onClick="makeSphereWithValue()">Submit</button>
+         Enter size, x, y, z, of sphere<br>
+         <input id="values" type="text" /><br>
+         <button name="data" type="button" onClick="makeSphereWithValue()">Submit</button>
+
+         <br />
+         <br />
+         <input id="droneAddress" type="text" />
+         <button name="addDrone" type="button" onClick="addDroneToEnvironment()">Add Drone</button>
+
+         <br />
+         <br />
+         <input id="droneId" type="text" />
+         <button name="removeDrone" type="button" onClick="removeDroneFromEnvironment()">Kill Drone</button>
+
       </form>
-      <br></br>
-      <button name="square" type="button" onClick="formSquare()">Get New Drone Positions</button>
+      <br>
+      <button name="square" type="button" onClick="flipPause()">Pause/Resume</button>
    </body>
 </html>
