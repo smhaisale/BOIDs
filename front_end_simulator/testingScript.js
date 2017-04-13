@@ -17,6 +17,7 @@ var testData = [{"ID":"drone1","pos":{"X":1,"Y":1,"Z":1},"type":{"TypeId":"type1
 var testData2 = [{"ID":"drone1","pos":{"X":-1,"Y":-1,"Z":-1},"type":{"TypeId":"type1","TypeDescription":"Simple sample drone type","Size":{"DX":1,"DY":1,"DZ":1},"MaxRange":{"DX":10,"DY":10,"DZ":10},"MaxSpeed":{"VX":10,"VY":10,"VZ":10}},"speed":{"VX":2,"VY":1,"VZ":-1}},
                 {"ID":"drone2","pos":{"X":-2,"Y":-2,"Z":-2},"type":{"TypeId":"type1","TypeDescription":"Simple sample drone type","Size":{"DX":1,"DY":1,"DZ":1},"MaxRange":{"DX":10,"DY":10,"DZ":10},"MaxSpeed":{"VX":10,"VY":10,"VZ":10}},"speed":{"VX":2,"VY":1,"VZ":-1}},
                 {"ID":"drone3","pos":{"X":-3,"Y":-3,"Z":-3},"type":{"TypeId":"type1","TypeDescription":"Simple sample drone type","Size":{"DX":1,"DY":1,"DZ":1},"MaxRange":{"DX":10,"DY":10,"DZ":10},"MaxSpeed":{"VX":10,"VY":10,"VZ":10}},"speed":{"VX":2,"VY":1,"VZ":-1}}];
+
 var bitmaps = [];
 var scene = new Phoria.Scene();
 var sphereList = [];
@@ -77,12 +78,13 @@ function makeSphereWithValue() {
 
       }
 
-
       //var sphere = createSphere(parseFloat(data[0]), parseInt(data[1]), parseInt(data[2]), parseInt(data[3]));
       //sphereList.push(sphereList);
       //scene.graph.push(sphere);
 }
 
+
+//Used in frontend to refresh drone positions
 function formSquare() {
 
    // insert some math stuff to form shapes.
@@ -120,26 +122,44 @@ function jsonCallback(json) {
 }
 
 function loadDroneData() {
-   // insert some call to fetch the initial data
-   for (var i = 0; i < testData.length; i++) {
-      var obj = testData[i];
-      var drone = new Drone(obj.ID,obj.pos.X,obj.pos.Y,obj.pos.Z);
-      var sphere = createSphere(drone.size, drone.currentX, drone.currentY, drone.currentZ);
-      sphereList.push(sphere);
-      scene.graph.push(sphere);
 
-      drone.sphere = sphere;
-      droneList.push(drone);
-   }
+   $.ajax({
+       async: false,
+       type: 'GET',
+       dataType: 'json',
+       url: 'http://localhost:18842/drones',
+       success: function(data) { testData = data; }
+   });
+
+    for (var i = 0; i < testData.length; i++) {
+        var obj = testData[i];
+        var drone = new Drone(obj.ID,obj.pos.X,obj.pos.Y,obj.pos.Z);
+        var sphere = createSphere(drone.size, drone.currentX, drone.currentY, drone.currentZ);
+        sphereList.push(sphere);
+        scene.graph.push(sphere);
+
+        drone.sphere = sphere;
+        droneList.push(drone);
+    }
+
 }
 
 function updateDronePositions() {
+
+    $.ajax({
+        async: false,
+        type: 'GET',
+        dataType: 'json',
+        url: 'http://localhost:18842/drones',
+        success: function(data) { testData2 = data; }
+    });
+
    for (var i = 0; i < testData2.length; i++) {
-      var currentDrone = droneList[i];
-      var objDrone = testData2[i];
-      if (currentDrone.X != objDrone.pos.X || currentDrone.Y != objDrone.pos.Y || currentDrone.Z != objDrone.pos.Z  ) {
-         currentDrone.setCoordinate(objDrone.pos.X,objDrone.pos.Y,objDrone.pos.Z);
-      }
+       var currentDrone = droneList[i];
+       var objDrone = testData2[i];
+       if (currentDrone.X != objDrone.pos.X || currentDrone.Y != objDrone.pos.Y || currentDrone.Z != objDrone.pos.Z  ) {
+          currentDrone.setCoordinate(objDrone.pos.X,objDrone.pos.Y,objDrone.pos.Z);
+       }
    }
    pause = false;
 }
@@ -160,7 +180,7 @@ function onloadHandler()
    **/
 
    loadDroneData();
-       // get conference list
+   // get conference list
 
    // get the images loading
    var loader = new Phoria.Preloader();
@@ -171,6 +191,7 @@ function onloadHandler()
    }
    loader.onLoadCallback(init);
 }
+
 function init()
 {
    console.log("init()");

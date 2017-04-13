@@ -1,4 +1,4 @@
-function Drone(id,x,y,z) {
+function Drone(id, x, y, z) {
    this.ID;
    this.size = 0.5;
    this.currentX = x;
@@ -10,7 +10,7 @@ function Drone(id,x,y,z) {
    this.dX = 0;
    this.dY = 0;
    this.dZ = 0;
-   this.speed = 0.01;
+   this.speed = 0.1;
    this.sphere;   
 }
 
