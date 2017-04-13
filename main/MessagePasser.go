@@ -1,5 +1,6 @@
 package main
 
+import "fmt"
 
 func Send(message TcpMessage) {
 	SendSocket(message)
@@ -7,7 +8,8 @@ func Send(message TcpMessage) {
 
 func Receive() {
 	for {
-		ReceiveSocket()
-		//fmt.Println(recvmsg)
+		recvMsg := ReceiveSocket()
+		fmt.Println("Receive Message from " + recvMsg.Source)
+		fmt.Println(recvMsg)
 	}
 }

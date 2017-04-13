@@ -6,9 +6,9 @@ type Node struct {
 	port    string
 }
 
-var NodeMap = map[string]Node{
-	"alice": Node{"alice", "192.168.1.5", "8081"},
-	"bob": Node{"bob", "192.168.1.5", "8082"},
-	"cat": Node{"cat", "192.168.1.5", "12358"},
-	"deb": Node{"deb", "192.168.1.5", "12359"},
+var NodeMap = map[string]Node {
+	"alice": Node{"alice", "localhost", "8081"},
+	"bob": Node{"bob", "localhost", "8082"},
+	"cat": Node{"cat", "localhost", "12358"},
+	"deb": Node{"deb", "localhost", "12359"},
 }

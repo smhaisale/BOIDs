@@ -18,7 +18,7 @@ var upgrader = websocket.Upgrader {
 
 type UIMessage struct {
     MessageType     string  `json:"messageType"`
-    DroneAddress    string  `json:"droneAddress"`
+    Data            string  `json:"data"`
 }
 
 func main() {
