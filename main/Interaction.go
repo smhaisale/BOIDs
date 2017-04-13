@@ -5,17 +5,17 @@ import "fmt"
 func main() {
 	var name string
 	fmt.Scanf("%s", &name)
-	Listen(NodeMap[name].port)
-	fmt.Println("listening")
+	go Listen(NodeMap[name].port)
+	go Receive()
+	fmt.Println("start")
 	myDrone := Drone{"0", Position{0, 1, 2}, DroneType{"0", "normal", Dimensions{1, 2, 3}, Dimensions{1, 2, 3}, Speed{1, 2, 3}}, Speed{1, 2, 3}}
 	msgData := MessageData{[]Drone{myDrone}}
-	msg := TcpMessage{"alice", "bob", 0, false, "Message", VectorTime{map[string]int{"alice": 1}}, msgData, MulticastData{}}
-	var input int
-	fmt.Scanf("%d", &input)
-	if input == 0 {
+	var dest string
+	for {
+		fmt.Scanf("%s", &dest)
 		fmt.Println("send message")
+		msg := TcpMessage{name, dest, 0, true, "Message", VectorTime{map[string]int{"alice": 1}}, msgData, MulticastData{}}
 		Send(msg)
 	}
-	go Receive()
 
 }

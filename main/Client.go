@@ -1,9 +1,8 @@
 package main
 
 import (
-	"encoding/gob"
 	"net"
-	"fmt"
+	"encoding/gob"
 )
 
 var nodeConnMap = make(map[string]net.Conn)
@@ -17,9 +16,9 @@ func connect(name string) {
 }
 
 func SendSocket(message TcpMessage) {
-	dest := message.destination
+	dest := message.Destination
 	connect(dest)
-	fmt.Println(nodeConnMap[dest])
-	encoder := gob.NewEncoder(nodeConnMap[dest])
-	encoder.Encode(message)
+	enc := gob.NewEncoder(nodeConnMap[dest])
+	enc.Encode(message)
+	nodeConnMap[dest].Close()
 }

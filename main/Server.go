@@ -1,39 +1,36 @@
 package main
 
 import (
-	"encoding/gob"
 	"fmt"
 	"net"
+	"encoding/gob"
 )
 
 var recvQueue = make(chan TcpMessage)
 
-func handleConnection(ln net.Listener) {
+func handleConnection(conn net.Conn) {
+	dec := gob.NewDecoder(conn)
+	var msg TcpMessage
+	dec.Decode(&msg)
+	recvQueue <- msg
+}
+
+func ReceiveSocket() TcpMessage {
+	msg := <-recvQueue
+	fmt.Println(msg)
+	return msg
+}
+
+func Listen(port string) {
+	ln, err := net.Listen("tcp", ":"+port)
+	if err != nil {
+		return
+	}
 	for {
 		conn, err := ln.Accept()
 		fmt.Println("accept")
 		if err != nil {
 		}
-		decoder := gob.NewDecoder(conn)
-		msg := &TcpMessage{}
-		decoder.Decode(msg)
-		fmt.Println(*msg)
-		if msg != nil {
-			recvQueue <- *msg
-		}
-		conn.Close()
+		go handleConnection(conn)
 	}
-}
-func ReceiveSocket() TcpMessage {
-	return <-recvQueue
-}
-
-func Listen(port string) {
-	ln, err := net.Listen("tcp", ":"+port)
-	fmt.Println("listen")
-	if err != nil {
-		return
-	}
-	go handleConnection(ln)
-	fmt.Println("done")
 }
