@@ -10,7 +10,7 @@ var nodeConnMap = make(map[string]net.Conn)
 func connect(name string) {
 	_, ok := nodeConnMap[name]
 	if !ok {
-		conn, _ := net.Dial("tcp", NodeMap[name].address+":"+NodeMap[name].port)
+		conn, _ := net.Dial("tcp", NodeMap[name].address+":" + NodeMap[name].port)
 		nodeConnMap[name] = conn
 	}
 }
