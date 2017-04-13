@@ -25,7 +25,7 @@ func TestPaxosWithSingleProposer(t *testing.T) {
 	l := newLearner(2001, pn.agentNetwork(2001), 1, 2, 3)
 	value := l.learn()
 	if value != "3D coordinates" {
-		t.Errorf("value = %s, want %s", value, "hello world")
+		t.Errorf("value = %s, want %s", value, "3D coordinates")
 	}
 }
 
@@ -53,7 +53,7 @@ func TestPaxosWithTwoProposers(t *testing.T) {
 	l := newLearner(2001, pn.agentNetwork(2001), 1, 2, 3)
 	value := l.learn()
 	if value != "3D coordinates" {
-		t.Errorf("value = %s, want %s", value, "hello world")
+		t.Errorf("value = %s, want %s", value, "3D coordinates")
 	}
 	time.Sleep(time.Millisecond)
 }
