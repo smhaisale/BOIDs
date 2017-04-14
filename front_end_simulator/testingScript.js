@@ -10,13 +10,13 @@ var requestAnimFrame = window.requestAnimationFrame || window.webkitRequestAnima
 // bind to window onload event
 window.addEventListener('load', onloadHandler, false);
 
-var testData = [{"ID":"drone1","pos":{"X":0,"Y":0,"Z":0},"type":{"TypeId":"type1","TypeDescription":"Simple sample drone type","Size":{"DX":1,"DY":1,"DZ":1},"MaxRange":{"DX":10,"DY":10,"DZ":10},"MaxSpeed":{"VX":10,"VY":10,"VZ":10}},"speed":{"VX":2,"VY":1,"VZ":-1}},
-    {"ID":"drone2","pos":{"X":0,"Y":0,"Z":0},"type":{"TypeId":"type1","TypeDescription":"Simple sample drone type","Size":{"DX":1,"DY":1,"DZ":1},"MaxRange":{"DX":10,"DY":10,"DZ":10},"MaxSpeed":{"VX":10,"VY":10,"VZ":10}},"speed":{"VX":2,"VY":1,"VZ":-1}},
-    {"ID":"drone3","pos":{"X":0,"Y":0,"Z":0},"type":{"TypeId":"type1","TypeDescription":"Simple sample drone type","Size":{"DX":1,"DY":1,"DZ":1},"MaxRange":{"DX":10,"DY":10,"DZ":10},"MaxSpeed":{"VX":10,"VY":10,"VZ":10}},"speed":{"VX":2,"VY":1,"VZ":-1}}];
-
-var testData2 = [{"ID":"drone1","pos":{"X":-1,"Y":-1,"Z":-1},"type":{"TypeId":"type1","TypeDescription":"Simple sample drone type","Size":{"DX":1,"DY":1,"DZ":1},"MaxRange":{"DX":10,"DY":10,"DZ":10},"MaxSpeed":{"VX":10,"VY":10,"VZ":10}},"speed":{"VX":2,"VY":1,"VZ":-1}},
-    {"ID":"drone2","pos":{"X":-2,"Y":-2,"Z":-2},"type":{"TypeId":"type1","TypeDescription":"Simple sample drone type","Size":{"DX":1,"DY":1,"DZ":1},"MaxRange":{"DX":10,"DY":10,"DZ":10},"MaxSpeed":{"VX":10,"VY":10,"VZ":10}},"speed":{"VX":2,"VY":1,"VZ":-1}},
-    {"ID":"drone3","pos":{"X":-3,"Y":-3,"Z":-3},"type":{"TypeId":"type1","TypeDescription":"Simple sample drone type","Size":{"DX":1,"DY":1,"DZ":1},"MaxRange":{"DX":10,"DY":10,"DZ":10},"MaxSpeed":{"VX":10,"VY":10,"VZ":10}},"speed":{"VX":2,"VY":1,"VZ":-1}}];
+// var testData = [{"ID":"drone1","pos":{"X":0,"Y":0,"Z":0},"type":{"TypeId":"type1","TypeDescription":"Simple sample drone type","Size":{"DX":1,"DY":1,"DZ":1},"MaxRange":{"DX":10,"DY":10,"DZ":10},"MaxSpeed":{"VX":10,"VY":10,"VZ":10}},"speed":{"VX":2,"VY":1,"VZ":-1}},
+//     {"ID":"drone2","pos":{"X":0,"Y":0,"Z":0},"type":{"TypeId":"type1","TypeDescription":"Simple sample drone type","Size":{"DX":1,"DY":1,"DZ":1},"MaxRange":{"DX":10,"DY":10,"DZ":10},"MaxSpeed":{"VX":10,"VY":10,"VZ":10}},"speed":{"VX":2,"VY":1,"VZ":-1}},
+//     {"ID":"drone3","pos":{"X":0,"Y":0,"Z":0},"type":{"TypeId":"type1","TypeDescription":"Simple sample drone type","Size":{"DX":1,"DY":1,"DZ":1},"MaxRange":{"DX":10,"DY":10,"DZ":10},"MaxSpeed":{"VX":10,"VY":10,"VZ":10}},"speed":{"VX":2,"VY":1,"VZ":-1}}];
+//
+// var testData2 = [{"ID":"drone1","pos":{"X":-1,"Y":-1,"Z":-1},"type":{"TypeId":"type1","TypeDescription":"Simple sample drone type","Size":{"DX":1,"DY":1,"DZ":1},"MaxRange":{"DX":10,"DY":10,"DZ":10},"MaxSpeed":{"VX":10,"VY":10,"VZ":10}},"speed":{"VX":2,"VY":1,"VZ":-1}},
+//     {"ID":"drone2","pos":{"X":-2,"Y":-2,"Z":-2},"type":{"TypeId":"type1","TypeDescription":"Simple sample drone type","Size":{"DX":1,"DY":1,"DZ":1},"MaxRange":{"DX":10,"DY":10,"DZ":10},"MaxSpeed":{"VX":10,"VY":10,"VZ":10}},"speed":{"VX":2,"VY":1,"VZ":-1}},
+//     {"ID":"drone3","pos":{"X":-3,"Y":-3,"Z":-3},"type":{"TypeId":"type1","TypeDescription":"Simple sample drone type","Size":{"DX":1,"DY":1,"DZ":1},"MaxRange":{"DX":10,"DY":10,"DZ":10},"MaxSpeed":{"VX":10,"VY":10,"VZ":10}},"speed":{"VX":2,"VY":1,"VZ":-1}}];
 
 var bitmaps = [];
 var scene = new Phoria.Scene();
@@ -108,24 +108,15 @@ function flipDebug() {
     console.log("Debug: " + debug);
 }
 
+function addDroneToEnvironment() {
+
+}
+
+function removeDroneFromEnvironment() {
+
+}
+
 function loadDroneData() {
-
-    for (var i = 0; i < testData.length; i++) {
-        var obj = testData[i];
-        var drone = new Drone(obj.ID,obj.pos.X,obj.pos.Y,obj.pos.Z);
-        var sphere = createSphere(obj.ID, drone.size, drone.currentX, drone.currentY, drone.currentZ);
-        sphereList.push(sphere);
-        scene.graph.push(sphere);
-
-        //Phoria.Entity.debug(sphere, {
-        //    showId: true,
-        //    showPosition: true
-        //});
-
-        drone.sphere = sphere;
-        droneList.push(drone);
-    }
-
     updateDronePositions();
 }
 
@@ -137,13 +128,22 @@ function updateDronePositions() {
             dataType: 'json',
             url: 'http://localhost:18842/getAllDrones',
             success: function (data) {
-                testData2 = data;
                 console.log(data);
-                for (var i = 0; i < testData2.length; i++) {
-                    var currentDrone = droneList[i];
-                    var objDrone = testData2[i];
-                    if (currentDrone.X != objDrone.pos.X || currentDrone.Y != objDrone.pos.Y || currentDrone.Z != objDrone.pos.Z) {
-                        currentDrone.setCoordinate(objDrone.pos.X, objDrone.pos.Y, objDrone.pos.Z);
+                for (var i = 0; i < data.length; i++) {
+                    var object = data[i];
+                    if (droneList.length <= i) {
+                        var drone = new Drone(object.ID, object.pos.X, object.pos.Y, object.pos.Z);
+                        var sphere = createSphere(object.ID, drone.size, drone.currentX, drone.currentY, drone.currentZ);
+                        sphereList.push(sphere);
+                        scene.graph.push(sphere);
+
+                        drone.sphere = sphere;
+                        droneList.push(drone);
+                    } else {
+                        var currentDrone = droneList[i];
+                        if (currentDrone.X != object.pos.X || currentDrone.Y != object.pos.Y || currentDrone.Z != object.pos.Z) {
+                            currentDrone.setCoordinate(object.pos.X, object.pos.Y, object.pos.Z);
+                        }
                     }
                 }
                 setTimeout(updateDronePositions, 1000);

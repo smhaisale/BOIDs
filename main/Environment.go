@@ -69,8 +69,8 @@ func killDrone(w http.ResponseWriter, r *http.Request) {
 }
 
 func refreshDroneInfo() {
-    for _, droneInfo := range droneInfoMap {
-        droneInfo.drone = getDroneFromServer(droneInfo.address)
+    for key, droneInfo := range droneInfoMap {
+        droneInfoMap[key] = DroneInfo{droneInfo.address, getDroneFromServer(droneInfo.address)}
     }
 }
 
