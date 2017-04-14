@@ -40,3 +40,20 @@ func getRequestBody(msg interface {}, req *http.Request) interface{} {
     defer req.Body.Close()
     return msg
 }
+
+func getResponseBody(msg interface {}, resp *http.Response) interface{} {
+
+    log.Println(resp)
+
+    body, err := ioutil.ReadAll(resp.Body)
+    if err != nil {
+        panic(err)
+    }
+    log.Println(string(body))
+    err = json.Unmarshal(body, msg)
+    if err != nil {
+        log.Printf("error: %v", err)
+    }
+    defer resp.Body.Close()
+    return msg
+}

@@ -29,7 +29,7 @@ func (v VectorTime) compare(timestamp VectorTime) int {
     }
 }
 
-//TODO: Put some initial values
+//TODO: Put some in
 var sampleTimestamp = VectorTime { map[string]int {}}
 
 func max(list ...int) int {
