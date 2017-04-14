@@ -3,19 +3,17 @@ package main
 import (
     "log"
     "net/http"
-    "github.com/gorilla/websocket"
     "math/rand"
 )
 
-var clients = make(map[*websocket.Conn]bool)        // connected clients
-var broadcast = make(chan UIMessage)                // broadcast channel
-
-// Configure the upgrader
-var upgrader = websocket.Upgrader {
-    CheckOrigin: func(r *http.Request) bool {
-        return true
-    },
+type DroneInfo struct {
+    address string
+    drone Drone
 }
+
+// Get drone configuration from local cache instead of creating mock data.
+var droneInfoMap = map[string]DroneInfo {}
+var client = http.Client{}
 
 type UIMessage struct {
     MessageType     string  `json:"messageType"`
@@ -24,11 +22,9 @@ type UIMessage struct {
 
 func main() {
 
-    //
-    http.HandleFunc("/drones", handleDroneRequest)
-
-    // Start listening for incoming chat messages
-    go handleMessages()
+    http.HandleFunc("/getAllDrones", getAllDrones)
+    http.HandleFunc("/addDrone", addDrone)
+    http.HandleFunc("/killDrones", killDrone)
 
     // Start the server on localhost port 8000 and log any errors
     log.Println("http server started on :18842")
@@ -39,47 +35,51 @@ func main() {
 }
 
 func getRandomCoordinates () (x, y, z float64) {
-    x = rand.Float64() * 5.0;
-    y = rand.Float64() * 5.0;
-    z = rand.Float64() * 5.0;
+    x = rand.Float64() * 20.0 - 10.0;
+    y = rand.Float64() * 20.0;
+    z = rand.Float64() * 20.0 - 10.0;
     log.Println("Random coordinates: ", x, y, z)
     return
 }
 
-func handleDroneRequest(w http.ResponseWriter, r *http.Request) {
-    msg := new(UIMessage)
-    getRequestBody(msg, r)
-    log.Println(msg)
+func getAllDrones(w http.ResponseWriter, r *http.Request) {
+    refreshDroneInfo()
 
-    // Get drone configuration from local cache instead of creating mock data.
-    drones := []Drone {sampleDrone, sampleDrone, sampleDrone}
-    drones[0].ID = "drone1"
-    x, y, z := getRandomCoordinates()
-    drones[0].Pos = Position {x, y, z}
-    x, y, z = getRandomCoordinates()
-    drones[1].ID = "drone2"
-    drones[1].Pos = Position {x, y, z}
-    x, y, z = getRandomCoordinates()
-    drones[2].ID = "drone3"
-    drones[2].Pos = Position {x, y, z}
+    drones := []Drone{}
+    for _, droneInfo := range droneInfoMap {
+        drones = append(drones, droneInfo.drone)
+    }
 
+    //drones[0].ID = "drone1"
+    //x, y, z := getRandomCoordinates()
+    //drones[0].Pos = Position {x, y, z}
     w.Header().Set("Access-Control-Allow-Origin", "*")
     w.Write([]byte(toJsonString(drones)))
 }
 
+func addDrone(w http.ResponseWriter, r *http.Request) {
 
-func handleMessages() {
-    for {
-        // Grab the next message from the broadcast channel
-        msg := <-broadcast
-        // Send it out to every client that is currently connected
-        for client := range clients {
-            err := client.WriteJSON(msg)
-            if err != nil {
-                log.Printf("error: %v", err)
-                client.Close()
-                delete(clients, client)
-            }
-        }
+    address := r.URL.Query().Get("data")
+    drone := getDroneFromServer(address)
+    droneInfoMap[drone.ID] = DroneInfo{address, drone}
+}
+
+func killDrone(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func refreshDroneInfo() {
+    for _, droneInfo := range droneInfoMap {
+        droneInfo.drone = getDroneFromServer(droneInfo.address)
     }
+}
+
+func getDroneFromServer(droneAddress string) Drone {
+    resp, err := client.Get("http://" + droneAddress + "/getDroneInfo")
+    if err != nil {
+        log.Println("Error! ", err)
+    }
+    drone := new(Drone)
+    getResponseBody(drone, resp)
+    return *drone
 }
