@@ -135,7 +135,7 @@ function updateDronePositions() {
         $.ajax({
             type: 'GET',
             dataType: 'json',
-            url: 'http://localhost:18842/drones',
+            url: 'http://localhost:18842/getAllDrones',
             success: function (data) {
                 testData2 = data;
                 console.log(data);
