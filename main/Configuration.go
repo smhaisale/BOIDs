@@ -22,4 +22,3 @@ var DRONE_GET_INFO_URL = "/getDroneInfo"
 var DRONE_UPDATE_SWARM_INFO_URL = "/updateSwarmInfo"
 var DRONE_MOVE_TO_POSITION_URL = "/moveToPosition"
 var DRONE_HEARTBEAT_URL = "/heartbeat"
-

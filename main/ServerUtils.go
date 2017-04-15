@@ -7,6 +7,10 @@ import (
     "encoding/json"
 )
 
+type GetRequest struct {
+    data string
+}
+
 // All contained variable names must begin with a capital letter to be visible by JSONWrapper
 func toJsonString(object interface{}) string {
     json, err := json.Marshal(object)
@@ -64,9 +68,9 @@ func getDroneFromServer(droneAddress string) (Drone, error) {
         log.Println("Error! ", err)
         return nil, err
     }
-    drone := new(Drone)
+    drone := Drone{}
     err = getResponseBody(drone, resp)
-    return *drone, err
+    return drone, err
 }
 
 func addDroneToServer(droneId string, droneAddress string) error {
@@ -75,4 +79,22 @@ func addDroneToServer(droneId string, droneAddress string) error {
         log.Println("Error! ", err)
     }
     return err
+}
+
+func makeGetRequest(url string, data string) (string, error) {
+    response, err := client.Get(url)
+    if err != nil {
+        log.Println("Error in making GET request! ", err)
+    }
+    request := GetRequest{}
+    err = getResponseBody(request, response)
+    return request.data, err
+}
+
+func parseGetRequest(jsonData string) (data interface {}, err error) {
+    err = json.Unmarshal([]byte(jsonData), data)
+    if err != nil {
+        log.Printf("error: %v", err)
+    }
+    return data, err
 }
