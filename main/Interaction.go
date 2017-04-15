@@ -9,8 +9,8 @@ func main() {
     Listen(NodeMap[name].port)
     go Receive()
 
-    myDrone := Drone{"0", Position{0, 1, 2}, DroneType{"0", "normal", Dimensions{1, 2, 3}, Dimensions{1, 2, 3}, Speed{1, 2, 3}}, Speed{1, 2, 3}}
-    msgData := MessageData{[]Drone{myDrone}}
+    myDrone := DroneObject{Position{0, 1, 2}, DroneType{"0", "normal", Dimensions{1, 2, 3}, Dimensions{1, 2, 3}, Speed{1, 2, 3}}, Speed{1, 2, 3}}
+    msgData := MessageData{[]Drone{Drone{"drone1", "", "", myDrone}}}
     var dest string
     for {
         fmt.Println("Input Destination:")

@@ -8,14 +8,15 @@ import (
     "time"
 )
 
+var droneObject DroneObject
 var drone Drone
 var swarm map[string]Drone
 
 func main() {
 
-    var droneId, port string
-    fmt.Println("Provide drone ID and port: ")
-    fmt.Scanf("%s %s", &droneId, &port)
+    var droneId, port, paxosRole string
+    fmt.Println("Provide drone ID, port, paxosRole: ")
+    fmt.Scanf("%s %s", &droneId, &port, &paxosRole)
 
     http.HandleFunc(DRONE_HEARTBEAT_URL, heartbeat)
     http.HandleFunc(DRONE_GET_INFO_URL, getDroneInfo)
@@ -23,8 +24,8 @@ func main() {
     http.HandleFunc(DRONE_MOVE_TO_POSITION_URL, moveToPosition)
     http.HandleFunc(DRONE_ADD_DRONE_URL, addNewDroneToSwarm)
 
-    drone = Drone{droneId, Position{0, 0, 0}, DroneType{"0", "normal", Dimensions{1, 2, 3}, Dimensions{1, 2, 3}, Speed{1, 2, 3}}, Speed{1, 2, 3}}
-
+    droneObject = DroneObject{Position{0, 0, 0}, DroneType{"0", "normal", Dimensions{1, 2, 3}, Dimensions{1, 2, 3}, Speed{1, 2, 3}}, Speed{1, 2, 3}}
+    drone = Drone{droneId, "localhost:" + port, paxosRole, droneObject}
     // Start the environment server on localhost port 18841 and log any errors
     log.Println("http server started on :" + port)
     err := http.ListenAndServe(":" + port, nil)
@@ -51,14 +52,14 @@ func main() {
 
 func moveDrone(newPos Position, t float64) {
     log.Println("Moving to ", newPos)
-    oldPos := drone.Pos
+    oldPos := droneObject.Pos
     for {
-        if newPos.X == drone.Pos.X && newPos.Y == drone.Pos.Y && newPos.Z == drone.Pos.Z {
+        if newPos.X == droneObject.Pos.X && newPos.Y == droneObject.Pos.Y && newPos.Z == droneObject.Pos.Z {
             break
         }
-        drone.Pos.X += (newPos.X - oldPos.X) / t
-        drone.Pos.Y += (newPos.Y - oldPos.Y) / t
-        drone.Pos.Z += (newPos.Z - oldPos.Z) / t
+        droneObject.Pos.X += (newPos.X - oldPos.X) / t
+        droneObject.Pos.Y += (newPos.Y - oldPos.Y) / t
+        droneObject.Pos.Z += (newPos.Z - oldPos.Z) / t
         time.Sleep(time.Duration(1000000000))
     }
 }

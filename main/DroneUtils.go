@@ -37,17 +37,24 @@ type DroneType struct {
 }
 
 // Drone object with all attributes for one running drone
-type Drone struct {
-	ID    string    `json: "id"`
+type DroneObject struct {
 	Pos   Position  `json:"pos"`
 	Type  DroneType `json:"type"`
 	Speed Speed     `json:"speed"`
 }
 
+// System representation of a drone including ID, URL, paxos role etc.
+type Drone struct {
+	ID			string		`json: "id"`
+	Address		string		`json: "address"`
+	paxosRole	string		`json: "paxosRole"`
+	DroneObject	DroneObject	`json: "droneObject"`
+}
+
 func (d Drone) moveTo(newPos Position, speed Speed) (time float64) {
-	timeX := math.Abs((newPos.X - d.Pos.X) / speed.VX)
-	timeY := math.Abs((newPos.Y - d.Pos.Y) / speed.VY)
-	timeZ := math.Abs((newPos.Z - d.Pos.Z) / speed.VZ)
+	timeX := math.Abs((newPos.X - d.DroneObject.Pos.X) / speed.VX)
+	timeY := math.Abs((newPos.Y - d.DroneObject.Pos.Y) / speed.VY)
+	timeZ := math.Abs((newPos.Z - d.DroneObject.Pos.Z) / speed.VZ)
 	return math.Max(timeX, math.Max(timeY, timeZ))
 }
 
@@ -59,4 +66,6 @@ var sampleDimension = Dimensions{1, 1, 1}
 
 var sampleDroneType = DroneType{"type1", "Simple sample drone type", sampleDimension, Dimensions{10, 10, 10}, Speed{10, 10, 10}}
 
-var sampleDrone = Drone{"drone1", samplePosition, sampleDroneType, sampleSpeed}
+var sampleDroneObject = DroneObject{samplePosition, sampleDroneType, sampleSpeed}
+
+var sampleDrone = Drone{"drone1", "localhost:1111", "learner", sampleDroneObject}
