@@ -5,6 +5,7 @@ import (
     "io/ioutil"
     "log"
     "encoding/json"
+    "io"
 )
 
 type GetRequest struct {
@@ -81,20 +82,16 @@ func addDroneToServer(droneId string, droneAddress string) error {
     return err
 }
 
+// Takes a URL and does a GET request with request body as the provided data. Returns response as a json string.
 func makeGetRequest(url string, data string) (string, error) {
-    response, err := client.Get(url)
+    req, err := http.NewRequest("GET", url, io.Reader(data))
+    if err != nil {
+        return nil, err
+    }
+    response, err := client.Do(req)
+    body, err := ioutil.ReadAll(response.Body)
     if err != nil {
         log.Println("Error in making GET request! ", err)
     }
-    request := GetRequest{}
-    err = getResponseBody(request, response)
-    return request.data, err
-}
-
-func parseGetRequest(jsonData string) (data interface {}, err error) {
-    err = json.Unmarshal([]byte(jsonData), data)
-    if err != nil {
-        log.Printf("error: %v", err)
-    }
-    return data, err
+    return string(body), err
 }
