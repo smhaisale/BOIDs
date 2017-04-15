@@ -65,7 +65,7 @@ func addDrone(w http.ResponseWriter, r *http.Request) {
     if err != nil {
         log.Println("Error! ", err)
     } else {
-        droneInfoMap[drone.ID] = DroneInfo{address, drone}
+        droneInfoMap[drone.ID] = DroneInfo{address, "", drone}
     }
 }
 
@@ -79,7 +79,7 @@ func refreshDroneInfo() {
         if err != nil {
             log.Println("Error in refreshDroneInfo()! ", err)
         } else {
-            droneInfoMap[key] = DroneInfo{droneInfo.address, drone}
+            droneInfoMap[key] = DroneInfo{droneInfo.address, "", drone}
         }
     }
 }
