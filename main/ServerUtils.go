@@ -5,7 +5,7 @@ import (
     "io/ioutil"
     "log"
     "encoding/json"
-    "io"
+    "bytes"
 )
 
 type GetRequest struct {
@@ -63,13 +63,12 @@ func getResponseBody(msg interface {}, resp *http.Response) error {
     return err
 }
 
-func getDroneFromServer(droneAddress string) (Drone, error) {
+func getDroneFromServer(droneAddress string) (drone Drone, err error) {
     resp, err := client.Get("http://" + droneAddress + DRONE_GET_INFO_URL)
     if err != nil {
         log.Println("Error! ", err)
-        return nil, err
+        return
     }
-    drone := Drone{}
     err = getResponseBody(drone, resp)
     return drone, err
 }
@@ -84,9 +83,9 @@ func addDroneToServer(droneId string, droneAddress string) error {
 
 // Takes a URL and does a GET request with request body as the provided data. Returns response as a json string.
 func makeGetRequest(url string, data string) (string, error) {
-    req, err := http.NewRequest("GET", url, io.Reader(data))
+    req, err := http.NewRequest("GET", url, bytes.NewBufferString(data))
     if err != nil {
-        return nil, err
+        return "", err
     }
     response, err := client.Do(req)
     body, err := ioutil.ReadAll(response.Body)
