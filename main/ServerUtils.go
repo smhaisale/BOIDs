@@ -8,6 +8,8 @@ import (
     "bytes"
 )
 
+var client = http.Client{}
+
 type GetRequest struct {
     data string
 }

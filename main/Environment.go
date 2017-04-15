@@ -8,7 +8,6 @@ import (
 
 // Get drone configuration from local cache instead of creating mock data.
 var droneMap = map[string]Drone {}
-var client = http.Client{}
 
 type UIMessage struct {
     MessageType     string  `json:"messageType"`
