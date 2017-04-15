@@ -9,6 +9,7 @@ import (
 )
 
 var drone Drone
+var swarm []string
 
 func main() {
 
@@ -20,6 +21,7 @@ func main() {
     http.HandleFunc("/getDroneInfo", getDroneInfo)
     http.HandleFunc("/updateSwarmInfo", updateSwarmInfo)
     http.HandleFunc("/moveToPosition", moveToPosition)
+    http.HandleFunc("/addNewDroneToSwarm", addNewDroneToSwarm)
 
     drone = Drone{droneId, Position{0, 0, 0}, DroneType{"0", "normal", Dimensions{1, 2, 3}, Dimensions{1, 2, 3}, Speed{1, 2, 3}}, Speed{1, 2, 3}}
 
@@ -82,4 +84,9 @@ func moveToPosition(w http.ResponseWriter, r *http.Request) {
     y, _ := strconv.ParseFloat(values.Get("Y"), 64)
     z, _ := strconv.ParseFloat(values.Get("Z"), 64)
     moveDrone(Position{x, y, z}, 20)
+}
+
+func addNewDroneToSwarm(w http.ResponseWriter, r *http.Request) {
+    values := r.URL.Query() 
+    swarm = append(swarm, values.Get("Id"))  
 }
