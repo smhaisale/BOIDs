@@ -1,9 +1,9 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"net"
-	"bufio"
 )
 
 var recvQueue = make(chan TcpMessage)

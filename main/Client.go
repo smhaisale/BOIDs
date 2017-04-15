@@ -1,8 +1,8 @@
 package main
 
 import (
-	"net"
 	"fmt"
+	"net"
 )
 
 var nodeConnMap = make(map[string]net.Conn)
