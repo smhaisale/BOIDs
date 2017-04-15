@@ -11,6 +11,14 @@ import (
 var droneObject DroneObject
 var drone Drone
 var swarm map[string]Drone
+var input_position = map[string]Position {
+    "Drone0" : Position{0, 10, 0},
+    "Drone1" : Position{0, 20, 0},
+    "Drone2" : Position{0, 30, 0},
+    "Drone3" : Position{0, 40, 0},
+    "Drone4" : Position{0, 50, 0},
+    "Drone5" : Position{0, 60, 0},
+}
 
 func main() {
 
