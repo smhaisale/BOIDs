@@ -71,7 +71,7 @@ func getDroneFromServer(droneAddress string) (drone Drone, err error) {
         log.Println("Error! ", err)
         return
     }
-    err = getResponseBody(drone, resp)
+    err = getResponseBody(&drone, resp)
     return drone, err
 }
 

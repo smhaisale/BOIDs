@@ -39,9 +39,9 @@ func getRandomCoordinates () (x, y, z float64) {
 func getAllDrones(w http.ResponseWriter, r *http.Request) {
     refreshDroneInfo()
 
-    drones := []DroneObject{}
+    drones := []Drone{}
     for _, drone := range droneMap {
-        drones = append(drones, drone.DroneObject)
+        drones = append(drones, drone)
     }
 
     w.Header().Set("Access-Control-Allow-Origin", "*")
