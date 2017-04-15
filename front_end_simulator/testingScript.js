@@ -22,6 +22,7 @@ var bitmaps = [];
 var scene = new Phoria.Scene();
 var sphereList = [];
 var droneList = [];
+var droneMap = {};
 
 var pause = true;
 var debug = false;
@@ -89,31 +90,70 @@ function flipPause() {
 function flipDebug() {
     debug = !debug;
     if (debug) {
+        for (var id in droneMap) {
+            Phoria.Entity.debug(droneMap[id].sphere, {
+                showId: true,
+                showPosition: true
+            });
+        }
+        /**
         for (var i = 0; i < droneList.length; i++) {
             Phoria.Entity.debug(droneList[i].sphere, {
                 showId: true,
                 showPosition: true
             });
         }
+        **/
         document.getElementById("flipDebug").innerHTML = "Remove Debug Info";
     } else {
+        for (var id in droneMap) {
+            Phoria.Entity.debug(droneMap[id].sphere, {
+                showId: false,
+                showPosition: false
+            });
+        }
+        /**
         for (var i = 0; i < droneList.length; i++) {
             Phoria.Entity.debug(droneList[i].sphere, {
                 showId: false,
                 showPosition: false
             });
         }
+        **/
         document.getElementById("flipDebug").innerHTML = "Add Debug Info";
     }
     console.log("Debug: " + debug);
 }
 
 function addDroneToEnvironment() {
+    var address = document.getElementById("droneAddress").value;
+    var addDroneUrl = 'http://localhost:18842/addDrone?messageType=type&data=' + address;
+
+    console.log(addDroneUrl);
+    $.ajax({
+    type: 'GET',
+    dataType: 'json',
+    url: addDroneUrl ,
+    success: function (data) {
+        console.log("added drone to the list");
+    }
+});
 
 }
 
 function removeDroneFromEnvironment() {
-
+    var address = document.getElementById("droneId").value;
+    // kill drone not implemented yet, call the function here when it's done
+    //var addDroneUrl = 'http://localhost:18842/addDrone?messageType=type&data=' + address;
+    /**
+    $.ajax({
+    type: 'GET',
+    dataType: 'json',
+    url: addDroneUrl ,
+    success: function (data) {
+        console.log("added drone to the list");
+    }
+    **/
 }
 
 function loadDroneData() {
@@ -129,8 +169,24 @@ function updateDronePositions() {
             url: 'http://localhost:18842/getAllDrones',
             success: function (data) {
                 console.log(data);
+                var mapSize = 0, key;
+                for (key in droneMap) {
+                    if (droneMap.hasOwnProperty(key)) mapSize++;
+                }
+                
+
                 for (var i = 0; i < data.length; i++) {
                     var object = data[i];
+                    if (mapSize <= i) {
+                        var drone = new Drone(object.ID, object.DroneObject.pos.X, object.DroneObject.pos.Y, object.DroneObject.pos.Z);
+                        var sphere = createSphere(object.ID, drone.size, drone.currentX, drone.currentY, drone.currentZ);
+                        sphereList.push(sphere);
+                        scene.graph.push(sphere);
+
+                        drone.sphere = sphere;
+                        droneMap[object.ID] = drone;
+
+                    /**
                     if (droneList.length <= i) {
                         var drone = new Drone(object.ID, object.pos.X, object.pos.Y, object.pos.Z);
                         var sphere = createSphere(object.ID, drone.size, drone.currentX, drone.currentY, drone.currentZ);
@@ -139,11 +195,18 @@ function updateDronePositions() {
 
                         drone.sphere = sphere;
                         droneList.push(drone);
+                        **/
                     } else {
+                        var currentDrone = droneMap[object.ID];
+                        if (currentDrone.X != object.DroneObject.pos.X || currentDrone.Y != object.DroneObject.pos.Y || currentDrone.Z != object.DroneObject.pos.Z) {
+                            currentDrone.setCoordinate(object.DroneObject.pos.X, object.DroneObject.pos.Y, object.DroneObject.pos.Z);
+                        }
+                        /**
                         var currentDrone = droneList[i];
                         if (currentDrone.X != object.pos.X || currentDrone.Y != object.pos.Y || currentDrone.Z != object.pos.Z) {
                             currentDrone.setCoordinate(object.pos.X, object.pos.Y, object.pos.Z);
                         }
+                        **/
                     }
                 }
                 setTimeout(updateDronePositions, 1000);
@@ -246,8 +309,10 @@ function init()
     var fnAnimate = function() {
         if (!pause)
         {
-            for (var i = 0; i < droneList.length; i++) {
-                var drone = droneList[i];
+            for (var id in droneMap) {
+         //   for (var i = 0; i < droneList.length; i++) {
+         //       var drone = droneList[i];
+                var drone = droneMap[id];
                 var sphere = drone.sphere;
                 sphere.translateX(drone.dX);
                 sphere.translateY(drone.dY);
