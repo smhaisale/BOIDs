@@ -22,9 +22,9 @@ type UIMessage struct {
 
 func main() {
 
-    http.HandleFunc("/getAllDrones", getAllDrones)
-    http.HandleFunc("/addDrone", addDrone)
-    http.HandleFunc("/killDrones", killDrone)
+    http.HandleFunc(ENVIRONMENT_GET_ALL_DRONES_URL, getAllDrones)
+    http.HandleFunc(ENVIRONMENT_ADD_DRONE_URL, addDrone)
+    http.HandleFunc(ENVIRONMENT_KILL_DRONE_URL, killDrone)
 
     // Start the server on localhost port 8000 and log any errors
     log.Println("http server started on :18842")
@@ -60,8 +60,12 @@ func getAllDrones(w http.ResponseWriter, r *http.Request) {
 func addDrone(w http.ResponseWriter, r *http.Request) {
 
     address := r.URL.Query().Get("data")
-    drone := getDroneFromServer(address)
-    droneInfoMap[drone.ID] = DroneInfo{address, drone}
+    drone, err := getDroneFromServer(address)
+    if err != nil {
+        log.Println("Error! ", err)
+    } else {
+        droneInfoMap[drone.ID] = DroneInfo{address, drone}
+    }
 }
 
 func killDrone(w http.ResponseWriter, r *http.Request) {
@@ -70,16 +74,11 @@ func killDrone(w http.ResponseWriter, r *http.Request) {
 
 func refreshDroneInfo() {
     for key, droneInfo := range droneInfoMap {
-        droneInfoMap[key] = DroneInfo{droneInfo.address, getDroneFromServer(droneInfo.address)}
+        drone, err := getDroneFromServer(droneInfo.address)
+        if err != nil {
+            log.Println("Error in refreshDroneInfo()! ", err)
+        } else {
+            droneInfoMap[key] = DroneInfo{droneInfo.address, drone}
+        }
     }
-}
-
-func getDroneFromServer(droneAddress string) Drone {
-    resp, err := client.Get("http://" + droneAddress + "/getDroneInfo")
-    if err != nil {
-        log.Println("Error! ", err)
-    }
-    drone := new(Drone)
-    getResponseBody(drone, resp)
-    return *drone
 }

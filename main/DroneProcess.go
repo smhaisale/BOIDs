@@ -9,7 +9,7 @@ import (
 )
 
 var drone Drone
-var swarm []string
+var swarm map[string]Drone
 
 func main() {
 
@@ -17,11 +17,11 @@ func main() {
     fmt.Println("Provide drone ID and port: ")
     fmt.Scanf("%s %s", &droneId, &port)
 
-    http.HandleFunc("/heartbeat", heartbeat)
-    http.HandleFunc("/getDroneInfo", getDroneInfo)
-    http.HandleFunc("/updateSwarmInfo", updateSwarmInfo)
-    http.HandleFunc("/moveToPosition", moveToPosition)
-    http.HandleFunc("/addNewDroneToSwarm", addNewDroneToSwarm)
+    http.HandleFunc(DRONE_HEARTBEAT_URL, heartbeat)
+    http.HandleFunc(DRONE_GET_INFO_URL, getDroneInfo)
+    http.HandleFunc(DRONE_UPDATE_SWARM_INFO_URL, updateSwarmInfo)
+    http.HandleFunc(DRONE_MOVE_TO_POSITION_URL, moveToPosition)
+    http.HandleFunc(DRONE_ADD_DRONE_URL, addNewDroneToSwarm)
 
     drone = Drone{droneId, Position{0, 0, 0}, DroneType{"0", "normal", Dimensions{1, 2, 3}, Dimensions{1, 2, 3}, Speed{1, 2, 3}}, Speed{1, 2, 3}}
 
@@ -87,6 +87,11 @@ func moveToPosition(w http.ResponseWriter, r *http.Request) {
 }
 
 func addNewDroneToSwarm(w http.ResponseWriter, r *http.Request) {
-    values := r.URL.Query() 
-    swarm = append(swarm, values.Get("Id"))  
+    address := r.URL.Query() .Get("address")
+    newDrone, err := getDroneFromServer(address)
+    if err != nil {
+        log.Println("Error! ", err)
+    } else {
+        swarm[newDrone.ID] = newDrone
+    }
 }

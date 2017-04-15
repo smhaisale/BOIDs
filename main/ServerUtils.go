@@ -41,7 +41,7 @@ func getRequestBody(msg interface {}, req *http.Request) interface{} {
     return msg
 }
 
-func getResponseBody(msg interface {}, resp *http.Response) interface{} {
+func getResponseBody(msg interface {}, resp *http.Response) error {
 
     log.Println(resp)
 
@@ -55,5 +55,24 @@ func getResponseBody(msg interface {}, resp *http.Response) interface{} {
         log.Printf("error: %v", err)
     }
     defer resp.Body.Close()
-    return msg
+    return err
+}
+
+func getDroneFromServer(droneAddress string) (Drone, error) {
+    resp, err := client.Get("http://" + droneAddress + DRONE_GET_INFO_URL)
+    if err != nil {
+        log.Println("Error! ", err)
+        return nil, err
+    }
+    drone := new(Drone)
+    err = getResponseBody(drone, resp)
+    return *drone, err
+}
+
+func addDroneToServer(droneId string, droneAddress string) error {
+    _, err := client.Get("http://" + droneAddress + DRONE_ADD_DRONE_URL + "?id=" + droneId)
+    if err != nil {
+        log.Println("Error! ", err)
+    }
+    return err
 }
