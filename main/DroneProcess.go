@@ -10,13 +10,13 @@ import (
 )
 
 var drone Drone
-var swarm map[string]Drone
+var Swarm map[string]Drone
 
 type MulticastRequestKey struct {
 	OriginalSender string
 	GroupSeqNum int
 }
-var haveSeenQueue map[MulticastRequestKey]bool
+var haveSeenMap map[MulticastRequestKey]bool
 
 var DroneId string
 
@@ -101,31 +101,22 @@ func addNewDroneToSwarm(w http.ResponseWriter, r *http.Request) {
 	if strings.Compare(msgType, MULTICAST_TYPE) == 0 {
 		msg := MulticastMessage{}
 		getRequestBody(&msg, r)
-		members, ok := GroupMap[msg.GroupName]
-		var isMember bool = false
-		if ok {
-			for _, member := range members {
-				if strings.Compare(member, DroneId) {
-					isMember = true
-				}
+		seenMsgKey := MulticastRequestKey{msg.OriginalSender, msg.GroupSeqNum}
+		if !haveSeenMap[seenMsgKey] {
+			address := r.URL.Query().Get("address")
+
+			if strings.Compare(DroneId, msg.OriginalSender) != 0 {
+				Multicast(msg.OriginalSender, msg.GroupName, DRONE_ADD_DRONE_URL, r.URL.Query(), msg.MessageData)
 			}
-		}
-		if isMember {
-			seenMsgKey := MulticastRequestKey{msg.OriginalSender, msg.GroupSeqNum}
-			if !haveSeenQueue[seenMsgKey] {
-				address := r.URL.Query().Get("address")
+			haveSeenMap[seenMsgKey] = true
 
-				if strings.Compare(DroneId, msg.OriginalSender) != 0 {
-					Multicast(msg.OriginalSender, msg.GroupName, DRONE_ADD_DRONE_URL, r.URL.Query(), msg.MessageData)
-				}
-				haveSeenQueue[seenMsgKey] = true
-
-				newDrone, err := getDroneFromServer(address)
-				if err != nil {
-					log.Println("Error! ", err)
-				} else {
-					swarm[newDrone.ID] = newDrone
-				}
+			newDrone, err := getDroneFromServer(address)
+			if err != nil {
+				log.Println("Error! ", err)
+			} else {
+				Swarm[newDrone.ID] = newDrone
+				fmt.Println("multicast: ")
+				fmt.Println(Swarm)
 			}
 		}
 	}

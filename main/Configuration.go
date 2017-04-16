@@ -15,16 +15,12 @@ var NodeMap = map[string]Node{
 
 // droneid: address
 var DroneNodeMap = map[string]string {
-
-}
-
-// groupName: group of drones identified with their id
-var GroupMap = map[string][]string {
-
+	"drone1": "localhost:12345",
+	"drone2": "localhost:12346",
+	"drone3": "localhost:12347",
 }
 
 var MULTICAST_TYPE = "multicast"
-var ALLDRONES_GROUP = "all"
 
 var ENVIRONMENT_GET_ALL_DRONES_URL = "/getAllDrones"
 var ENVIRONMENT_ADD_DRONE_URL = "/addDrone"

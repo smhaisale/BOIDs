@@ -7,6 +7,7 @@ import (
     "encoding/json"
 )
 
+
 type GetRequest struct {
     data string
 }
@@ -98,4 +99,3 @@ func parseGetRequest(jsonData string) (data interface {}, err error) {
     }
     return data, err
 }
-
