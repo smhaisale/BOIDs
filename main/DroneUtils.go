@@ -1,6 +1,8 @@
 package main
 
-import "math"
+import (
+	"math"
+)
 
 /**
   This class is intended to encapsulate all the physical attributes and actions of a single drone.
@@ -89,7 +91,7 @@ func min(list ...int) int {
 	return min
 }
 
-func (d Drone) calculateCoordinates(n int) []Position{
+func calculateCoordinates(n int) []Position{
         var angle float64
         angle = float64 (2) * math.Pi / float64(n)
         posArray := make([]Position, n, 2*n)

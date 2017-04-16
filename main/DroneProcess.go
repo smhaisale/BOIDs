@@ -3,14 +3,17 @@ package main
 import (
     "fmt"
     "net/http"
-    "log"
     "strconv"
     "time"
+    "log"
 )
 
 var droneObject DroneObject = DroneObject{}
 var drone Drone = Drone{}
 var swarm map[string]Drone = make(map[string]Drone)
+
+var paxosClient = PaxosMessagePasser{}
+var formPolygonPaxosClient = PaxosMessagePasser{}
 
 var input_position = map[string]Position {
     "Drone0" : Position{0, 10, 0},
@@ -21,11 +24,16 @@ var input_position = map[string]Position {
     "Drone5" : Position{0, 60, 0},
 }
 
+type MoveInstruction struct {
+    positions map[string]Position
+}
+
 func main() {
 
     var droneId, port string
+    var x, y, z float64
     fmt.Println("Provide drone ID, port: ")
-    fmt.Scanf("%s %s", &droneId, &port)
+    fmt.Scanf("%s %s %f %f %f", &droneId, &port, x, y, z)
 
     http.HandleFunc(DRONE_HEARTBEAT_URL, heartbeat)
     http.HandleFunc(DRONE_GET_INFO_URL, getDroneInfo)
@@ -33,9 +41,10 @@ func main() {
     http.HandleFunc(DRONE_MOVE_TO_POSITION_URL, moveToPosition)
     http.HandleFunc(DRONE_ADD_DRONE_URL, addNewDroneToSwarm)
     http.HandleFunc(DRONE_PAXOS_MESSAGE_URL, handlePaxosMessage)
+    http.HandleFunc(DRONE_FORM_POLYGON_URL, droneFormPolygon)
     http.HandleFunc("/proposeNewValue", proposeNewValue)
 
-    droneObject = DroneObject{Position{0, 0, 0}, DroneType{"0", "normal", Dimensions{1, 2, 3}, Dimensions{1, 2, 3}, Speed{1, 2, 3}}, Speed{1, 2, 3}}
+    droneObject = DroneObject{Position{x, y, z}, DroneType{"0", "normal", Dimensions{1, 2, 3}, Dimensions{1, 2, 3}, Speed{1, 2, 3}}, Speed{1, 2, 3}}
     drone = Drone{droneId, "localhost:" + port, droneObject}
     // Start the environment server on localhost port 18841 and log any errors
     log.Println("http server started on :" + port)
@@ -72,10 +81,9 @@ func moveDrone(newPos Position, t float64) {
         droneObject.Pos.Y += (newPos.Y - oldPos.Y) / t
         droneObject.Pos.Z += (newPos.Z - oldPos.Z) / t
         time.Sleep(time.Duration(1000000000))
-        drone.DroneObject = droneObject;
+        drone.DroneObject = droneObject
     }
     log.Println("DroneObject in moveDrone", droneObject)
-
 }
 
 func heartbeat(w http.ResponseWriter, r *http.Request) {
@@ -107,6 +115,7 @@ func moveToPosition(w http.ResponseWriter, r *http.Request) {
 
 func addNewDroneToSwarm(w http.ResponseWriter, r *http.Request) {
     address := r.URL.Query() .Get("address")
+    log.Println("Received add drone request at address " + address)
     if address == drone.Address {
         return
     }
@@ -122,12 +131,40 @@ func addNewDroneToSwarm(w http.ResponseWriter, r *http.Request) {
             makeGetRequest( "http://" + address + DRONE_ADD_DRONE_URL + "?address=" + swarmDrone.Address, "")
         }
         makeGetRequest( "http://" + address + DRONE_ADD_DRONE_URL + "?address=" + drone.Address, "")
-
     }
 }
 
 func proposeNewValue(w http.ResponseWriter, r *http.Request) {
     data := r.URL.Query() .Get("data")
-    message := createPrepareMessage(data)
-    sendPaxosMessage(message)
+    message := paxosClient.createPrepareMessage(data)
+    paxosClient.sendPaxosMessage(message)
+}
+
+func handlePaxosMessage(w http.ResponseWriter, r *http.Request) {
+    message := PaxosMessage{}
+    getRequestBody(&message, r)
+
+    switch (message.ID) {
+    case 1:
+        paxosClient.handlePaxosMessage(message)
+    case 2:
+        result := formPolygonPaxosClient.handlePaxosMessage(message)
+        if result != "" {
+            instruction := MoveInstruction{}
+            fromJsonString(instruction, result)
+            moveDrone(instruction.positions[drone.ID], 10)
+        }
+    }
+}
+
+func droneFormPolygon(w http.ResponseWriter, r *http.Request) {
+    log.Println("Received form polygon request at " + drone.ID)
+    index, positions := 0, calculateCoordinates(len(swarm))
+    instruction := MoveInstruction{}
+    for _,drone := range swarm {
+        instruction.positions[drone.ID] = positions[index]
+        index++
+    }
+    message := formPolygonPaxosClient.createPrepareMessage(toJsonString(instruction))
+    formPolygonPaxosClient.sendPaxosMessage(message)
 }

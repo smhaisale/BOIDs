@@ -19,6 +19,7 @@ func main() {
     http.HandleFunc(ENVIRONMENT_GET_ALL_DRONES_URL, getAllDrones)
     http.HandleFunc(ENVIRONMENT_ADD_DRONE_URL, addDrone)
     http.HandleFunc(ENVIRONMENT_KILL_DRONE_URL, killDrone)
+    http.HandleFunc(ENVIRONMENT_FORM_POLYGON_URL, formPolygon)
 
     // Start the server on localhost port 8000 and log any errors
     log.Println("http server started on :18842")
@@ -51,16 +52,26 @@ func getAllDrones(w http.ResponseWriter, r *http.Request) {
 func addDrone(w http.ResponseWriter, r *http.Request) {
 
     address := r.URL.Query().Get("data")
+    log.Println("Received add drone request at address " + address)
     drone, err := getDroneFromServer(address)
     if err != nil {
         log.Println("Error! ", err)
     } else {
-        droneMap[drone.ID] = Drone{drone.ID, address, "", drone.DroneObject}
+        droneMap[drone.ID] = Drone{drone.ID, address, drone.DroneObject}
     }
 }
 
 func killDrone(w http.ResponseWriter, r *http.Request) {
 
+}
+
+func formPolygon(w http.ResponseWriter, r *http.Request) {
+    log.Println("Received form polygon request")
+    for _, drone := range droneMap {
+        address := "http://" + drone.Address + ENVIRONMENT_FORM_POLYGON_URL
+        makeGetRequest(address, "")
+        break
+    }
 }
 
 func refreshDroneInfo() {
@@ -69,7 +80,7 @@ func refreshDroneInfo() {
         if err != nil {
             log.Println("Error in refreshDroneInfo()! ", err)
         } else {
-            droneMap[key] = Drone{drone.ID, drone.Address,"", drone.DroneObject}
+            droneMap[key] = Drone{drone.ID, drone.Address, drone.DroneObject}
         }
     }
 }

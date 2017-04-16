@@ -129,16 +129,15 @@ function addDroneToEnvironment(address) {
 }
 
 function formPolygon() {
-    var shape = document.getElementById('polygonName').value;
-    if (shape === "square") {
-        console.log("form a square");
-    } else if (shape === "triangle") {
-        console.log("form a triangle");
-    } else if (shape === "hexagon") {
-        console.log("form a hexagon");
-    } else {
-        console.log("unknown shape");
-    }
+    var formPolygonUrl = 'http://localhost:18842/formPolygon';
+    $.ajax({
+        type: 'GET',
+        dataType: 'json',
+        url: formPolygonUrl,
+        success: function (data) {
+            console.log("Sent form polygon request");
+        }
+    })
 }
 
 function removeDroneFromEnvironment(address) {
@@ -343,22 +342,27 @@ function init()
 
     // add GUI controls
     var gui = new dat.GUI();
+
     var f = gui.addFolder('Perspective');
     f.add(scene.perspective, "fov").min(5).max(175);
     f.add(scene.perspective, "near").min(1).max(100);
     f.add(scene.perspective, "far").min(1).max(200);
-    //f = gui.addFolder('Camera LookAt');
-    //f.add(scene.camera.lookat, "x").min(-100).max(100);
-    //f.add(scene.camera.lookat, "y").min(-100).max(100);
-    //f.add(scene.camera.lookat, "z").min(-100).max(100);
+
+    f = gui.addFolder('Camera LookAt');
+    f.add(scene.camera.lookat, "x").min(-100).max(100);
+    f.add(scene.camera.lookat, "y").min(-100).max(100);
+    f.add(scene.camera.lookat, "z").min(-100).max(100);
+
     f = gui.addFolder('Camera Position');
     f.add(scene.camera.position, "x").min(-100).max(100);
     f.add(scene.camera.position, "y").min(-100).max(100);
     f.add(scene.camera.position, "z").min(-100).max(100);
+
     f = gui.addFolder('Camera Up');
     f.add(scene.camera.up, "x").min(-10).max(10).step(0.1);
     f.add(scene.camera.up, "y").min(-10).max(10).step(0.1);
     f.add(scene.camera.up, "z").min(-10).max(10).step(0.1);
+
     f = gui.addFolder('Light');
     f.add(light.direction, "x").min(-25).max(25).step(0.1);
     f.add(light.direction, "y").min(-25).max(25).step(0.1);
@@ -367,6 +371,7 @@ function init()
     f.add(light.color, "1").min(0).max(1).step(0.1).name("green");
     f.add(light.color, "2").min(0).max(1).step(0.1).name("blue");
     f.add(light, "intensity").min(0).max(1).step(0.1);
+
     f = gui.addFolder('Drone Controls')
     f.add(drone, 'start').name('Running').onFinishChange(function(){flipPause()});
     f.add(drone, 'debug').name('Show Debug Info').onFinishChange(function(){flipDebug()});
@@ -374,6 +379,7 @@ function init()
     f.add(drone, 'id').name('Kill Drone').onFinishChange(function(){addDroneToEnvironment(drone.id)});
     f.add(drone, 'formPolygon').name('Form Polygon');
     f.open();
+
     // start animation
     requestAnimFrame(fnAnimate);
 }

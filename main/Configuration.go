@@ -16,11 +16,13 @@ var NodeMap = map[string]Node {
 var ENVIRONMENT_GET_ALL_DRONES_URL = "/getAllDrones"
 var ENVIRONMENT_ADD_DRONE_URL = "/addDrone"
 var ENVIRONMENT_KILL_DRONE_URL = "/killDrone"
+var ENVIRONMENT_FORM_POLYGON_URL = "/formPolygon"
 
-var DRONE_ADD_DRONE_URL = "/killDrone"
+var DRONE_ADD_DRONE_URL = "/addDroneToSwarm"
 var DRONE_GET_INFO_URL = "/getDroneInfo"
-var DRONE_UPDATE_SWARM_INFO_URL = "/updateSwarmInfo"
+var DRONE_UPDATE_SWARM_INFO_URL = "/getSwarmInfo"
 var DRONE_MOVE_TO_POSITION_URL = "/moveToPosition"
 var DRONE_HEARTBEAT_URL = "/heartbeat"
+var DRONE_FORM_POLYGON_URL = "/formPolygon"
 
 var DRONE_PAXOS_MESSAGE_URL = "/paxosMessage"
