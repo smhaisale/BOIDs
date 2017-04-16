@@ -86,8 +86,6 @@ func addDroneToServer(droneId string, droneAddress string) error {
 // Takes a URL and does a GET request with request body as the provided data. Returns response as a json string.
 func makeGetRequest(url string, data string) (string, error) {
 	req, err := http.NewRequest("GET", url, bytes.NewBufferString(data))
-    log.Println(url)
-        log.Println(req)
 	if err != nil {
 		return "", err
 	}
@@ -95,21 +93,6 @@ func makeGetRequest(url string, data string) (string, error) {
 	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		log.Println("Error in making GET request! ", err)
-	}
-	return string(body), err
-}
-
-func makePostRequest(url string, data string) (string, error) {
-	req, err := http.NewRequest("POST", url, bytes.NewBufferString(data))
-    log.Println(url)
-    log.Println(req)
-	if err != nil {
-		return "", err
-	}
-	response, err := client.Do(req)
-	body, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		log.Println("Error in making POST request! ", err)
 	}
 	return string(body), err
 }

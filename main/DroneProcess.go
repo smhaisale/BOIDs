@@ -8,13 +8,12 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"reflect"
 	"net/url"
 )
 
 var droneObject DroneObject
 var drone Drone
-var Swarm = make(map[string]Drone)
+var swarm = make(map[string]Drone)
 
 type MulticastRequestKey struct {
 	OriginalSender string
@@ -44,12 +43,12 @@ func main() {
 	http.HandleFunc(DRONE_ADD_DRONE_URL, addNewDroneToSwarm)
 	http.HandleFunc(DRONE_PAXOS_MESSAGE_URL, handlePaxosMessage)
 	http.HandleFunc("/getswarm", getSwarm)
-	http.HandleFunc("/multicast", multi)
+	http.HandleFunc("/multi", multi)
 
 	droneObject = DroneObject{Position{0, 0, 0}, DroneType{"0", "normal", Dimensions{1, 2, 3}, Dimensions{1, 2, 3}, Speed{1, 2, 3}}, Speed{1, 2, 3}}
 	drone = Drone{droneId, "localhost:" + port, paxosRole, droneObject}
 	// Start the environment server on localhost port 18841 and log any errors
-	Swarm[droneId] = drone
+	swarm[droneId] = drone
 	log.Println("http server started on :" + port)
 	err := http.ListenAndServe(":"+port, nil)
 	if err != nil {
@@ -108,20 +107,16 @@ func updateSwarmInfo(w http.ResponseWriter, r *http.Request) {
 }
 
 func getSwarm(w http.ResponseWriter, r *http.Request) {
-	keys := reflect.ValueOf(Swarm).MapKeys()
-	strkeys := make([]string, len(keys))
-	for i := 0; i < len(keys); i++ {
-		strkeys[i] = keys[i].String()
-	}
-	w.Write([]byte(toJsonString(strkeys)))
+	drones := getDrones()
+	w.Write([]byte(toJsonString(drones)))
 }
 
 func multi(w http.ResponseWriter, r *http.Request) {
 	port := r.URL.Query().Get("port")
 	param := url.Values{}
-	param.Set("type", "multicast")
-	param.Add("address", "localhost:" + port)
-	Multicast("drone1", "drone2", DRONE_ADD_DRONE_URL, param,"none")
+	param.Add("type", "multicast")
+	param.Add("address", "localhost:"+port)
+	Multicast("drone1", "drone2", DRONE_ADD_DRONE_URL, param, "")
 }
 
 func moveToPosition(w http.ResponseWriter, r *http.Request) {
@@ -140,17 +135,16 @@ func addNewDroneToSwarm(w http.ResponseWriter, r *http.Request) {
 		msg := MulticastMessage{}
 		getRequestBody(&msg, r)
 		seenMsgKey := MulticastRequestKey{msg.OriginalSender, msg.GroupSeqNum}
-		log.Println("message")
 		if !haveSeenMap[seenMsgKey] {
 			address := r.URL.Query().Get("address")
 			newDrone, err := getDroneFromServer(address)
 			if err != nil {
 				log.Println("Error! ", err)
 			} else {
-				Swarm[newDrone.ID] = newDrone
+				swarm[newDrone.ID] = newDrone
 			}
-			Multicast(msg.OriginalSender, msg.Destination, DRONE_ADD_DRONE_URL, r.URL.Query(), msg.MessageData)
 			haveSeenMap[seenMsgKey] = true
+			defer sendMulticast(DRONE_ADD_DRONE_URL, r.URL.Query(), msg)
 		}
 	} else {
 		address := r.URL.Query().Get("address")
@@ -158,15 +152,11 @@ func addNewDroneToSwarm(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Println("Error! ", err)
 		} else {
-			Swarm[newDrone.ID] = newDrone
+			swarm[newDrone.ID] = newDrone
 		}
 	}
-	keys := reflect.ValueOf(Swarm).MapKeys()
-	strkeys := make([]string, len(keys))
-	for i := 0; i < len(keys); i++ {
-		strkeys[i] = keys[i].String()
-	}
-	w.Write([]byte(toJsonString(strkeys)))
+	drones := getDrones()
+	w.Write([]byte(toJsonString(drones)))
 }
 
 func sendPaxosMessage(droneId string, paxosMessage paxos.Message) {
