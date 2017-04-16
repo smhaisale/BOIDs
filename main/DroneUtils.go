@@ -47,7 +47,6 @@ type DroneObject struct {
 type Drone struct {
 	ID			string		`json: "id"`
 	Address		string		`json: "address"`
-	paxosRole	string		`json: "paxosRole"`
 	DroneObject	DroneObject	`json: "droneObject"`
 }
 
@@ -68,4 +67,24 @@ var sampleDroneType = DroneType{"type1", "Simple sample drone type", sampleDimen
 
 var sampleDroneObject = DroneObject{samplePosition, sampleDroneType, sampleSpeed}
 
-var sampleDrone = Drone{"drone1", "localhost:1111", "learner", sampleDroneObject}
+var sampleDrone = Drone{"drone1", "localhost:1111", sampleDroneObject}
+
+func max(list ...int) int {
+	max := list[0]
+	for _, i := range list[1:] {
+		if i > max {
+			max = i
+		}
+	}
+	return max
+}
+
+func min(list ...int) int {
+	min := list[0]
+	for _, i := range list[1:] {
+		if i < min {
+			min = i
+		}
+	}
+	return min
+}

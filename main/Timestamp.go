@@ -32,22 +32,3 @@ func (v VectorTime) compare(timestamp VectorTime) int {
 //TODO: Put some in
 var sampleTimestamp = VectorTime { map[string]int {}}
 
-func max(list ...int) int {
-    max := list[0]
-    for _, i := range list[1:] {
-        if i > max {
-            max = i
-        }
-    }
-    return max
-}
-
-func min(list ...int) int {
-    min := list[0]
-    for _, i := range list[1:] {
-        if i < min {
-            min = i
-        }
-    }
-    return min
-}

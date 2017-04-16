@@ -93,6 +93,7 @@ func makeGetRequest(url string, data string) (string, error) {
     body, err := ioutil.ReadAll(response.Body)
     if err != nil {
         log.Println("Error in making GET request! ", err)
+        return "", err
     }
     return string(body), err
 }

@@ -6,12 +6,11 @@ import (
     "log"
     "strconv"
     "time"
-    "./paxos"
 )
 
-var droneObject DroneObject
-var drone Drone
-var swarm map[string]Drone
+var droneObject DroneObject = DroneObject{}
+var drone Drone = Drone{}
+var swarm map[string]Drone = make(map[string]Drone)
 
 var input_position = map[string]Position {
     "Drone0" : Position{0, 10, 0},
@@ -24,9 +23,9 @@ var input_position = map[string]Position {
 
 func main() {
 
-    var droneId, port, paxosRole string
-    fmt.Println("Provide drone ID, port, paxosRole: ")
-    fmt.Scanf("%s %s", &droneId, &port, &paxosRole)
+    var droneId, port string
+    fmt.Println("Provide drone ID, port: ")
+    fmt.Scanf("%s %s", &droneId, &port)
 
     http.HandleFunc(DRONE_HEARTBEAT_URL, heartbeat)
     http.HandleFunc(DRONE_GET_INFO_URL, getDroneInfo)
@@ -34,9 +33,10 @@ func main() {
     http.HandleFunc(DRONE_MOVE_TO_POSITION_URL, moveToPosition)
     http.HandleFunc(DRONE_ADD_DRONE_URL, addNewDroneToSwarm)
     http.HandleFunc(DRONE_PAXOS_MESSAGE_URL, handlePaxosMessage)
+    http.HandleFunc("/proposeNewValue", proposeNewValue)
 
     droneObject = DroneObject{Position{0, 0, 0}, DroneType{"0", "normal", Dimensions{1, 2, 3}, Dimensions{1, 2, 3}, Speed{1, 2, 3}}, Speed{1, 2, 3}}
-    drone = Drone{droneId, "localhost:" + port, paxosRole, droneObject}
+    drone = Drone{droneId, "localhost:" + port, droneObject}
     // Start the environment server on localhost port 18841 and log any errors
     log.Println("http server started on :" + port)
     err := http.ListenAndServe(":" + port, nil)
@@ -84,15 +84,15 @@ func heartbeat(w http.ResponseWriter, r *http.Request) {
 }
 
 func getDroneInfo(w http.ResponseWriter, r *http.Request) {
-   // log.Println("Drone.droneObject in getDroneInfo ", drone.droneObject)
-   // log.Println("DroneObject in moveDrone ", droneObject)
+    // log.Println("Drone.droneObject in getDroneInfo ", drone.droneObject)
+    // log.Println("DroneObject in moveDrone ", droneObject)
     w.Header().Set("Access-Control-Allow-Origin", "*")
     w.Write([]byte(toJsonString(drone)))
 }
 
 func updateSwarmInfo(w http.ResponseWriter, r *http.Request) {
-    //w.Header().Set("Access-Control-Allow-Origin", "*")
-    //w.Write([]byte(toJsonString(drone)))
+    w.Header().Set("Access-Control-Allow-Origin", "*")
+    w.Write([]byte(toJsonString(swarm)))
 }
 
 func moveToPosition(w http.ResponseWriter, r *http.Request) {
@@ -107,18 +107,27 @@ func moveToPosition(w http.ResponseWriter, r *http.Request) {
 
 func addNewDroneToSwarm(w http.ResponseWriter, r *http.Request) {
     address := r.URL.Query() .Get("address")
+    if address == drone.Address {
+        return
+    }
     newDrone, err := getDroneFromServer(address)
-    if err != nil {
+    if err != nil || swarm[newDrone.ID] == newDrone {
         log.Println("Error! ", err)
+        return
     } else {
         swarm[newDrone.ID] = newDrone
+        for _, swarmDrone := range swarm {
+            swarmDroneAddress := "http://" + swarmDrone.Address + DRONE_ADD_DRONE_URL + "?address=" + address
+            makeGetRequest(swarmDroneAddress, "")
+            makeGetRequest( "http://" + address + DRONE_ADD_DRONE_URL + "?address=" + swarmDrone.Address, "")
+        }
+        makeGetRequest( "http://" + address + DRONE_ADD_DRONE_URL + "?address=" + drone.Address, "")
+
     }
 }
 
-func sendPaxosMessage(droneId string, paxosMessage paxos.Message) {
-    
-}
-
-func handlePaxosMessage(w http.ResponseWriter, r *http.Request) {
-
+func proposeNewValue(w http.ResponseWriter, r *http.Request) {
+    data := r.URL.Query() .Get("data")
+    message := createPrepareMessage(data)
+    sendPaxosMessage(message)
 }
