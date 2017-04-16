@@ -30,12 +30,14 @@ type PaxosMessage struct {
     Data            string
 }
 
-func (p PaxosMessagePasser) createPrepareMessage(data string) (message PaxosMessage) {
+func (p *PaxosMessagePasser) createPrepareMessage(data string) (message PaxosMessage) {
     p.reset()
     p.currentState = PAXOS_PROPOSER_ROLE_TYPE
-    message.Source = drone.ID
     message.Type = PAXOS_PREPARE_MESSAGE_TYPE
     p.paxosSeqNum++
+
+    message.ID = p.id
+    message.Source = drone.ID
     message.SeqNum = p.paxosSeqNum
     message.Data = data
 
@@ -43,7 +45,8 @@ func (p PaxosMessagePasser) createPrepareMessage(data string) (message PaxosMess
     return message
 }
 
-func (p PaxosMessagePasser) createPromiseMessage(dest string, data string) (message PaxosMessage) {
+func (p *PaxosMessagePasser) createPromiseMessage(dest string, data string) (message PaxosMessage) {
+    message.ID = p.id
     message.Destination = dest
     message.Type = PAXOS_PROMISE_MESSAGE_TYPE
     message.SeqNum = p.paxosSeqNum
@@ -53,7 +56,9 @@ func (p PaxosMessagePasser) createPromiseMessage(dest string, data string) (mess
     return message
 }
 
-func (p PaxosMessagePasser) createAcceptMessage(data string) (message PaxosMessage) {
+func (p *PaxosMessagePasser) createAcceptMessage(data string) (message PaxosMessage) {
+
+    message.ID = p.id
     message.Source = drone.ID
     message.Type = PAXOS_ACCEPT_MESSAGE_TYPE
     message.SeqNum = p.paxosSeqNum
@@ -63,7 +68,7 @@ func (p PaxosMessagePasser) createAcceptMessage(data string) (message PaxosMessa
     return message
 }
 
-func (p PaxosMessagePasser) sendPaxosMessage(message PaxosMessage) {
+func (p *PaxosMessagePasser) sendPaxosMessage(message PaxosMessage) {
     jsonData := toJsonString(message)
     for _, drone := range swarm {
         address := "http://" + drone.Address + DRONE_PAXOS_MESSAGE_URL
@@ -74,7 +79,7 @@ func (p PaxosMessagePasser) sendPaxosMessage(message PaxosMessage) {
     }
 }
 
-func (p PaxosMessagePasser) handlePaxosMessage(message PaxosMessage) string {
+func (p *PaxosMessagePasser) handlePaxosMessage(message PaxosMessage) string {
 
     if message.SeqNum >= p.paxosSeqNum{
         log.Println("Received Paxos message: ", message)
@@ -96,15 +101,18 @@ func (p PaxosMessagePasser) handlePaxosMessage(message PaxosMessage) string {
             }
         }
     case PAXOS_PROMISE_MESSAGE_TYPE:
-        if p.currentState == PAXOS_PROPOSER_ROLE_TYPE && p.paxosSeqNum == message.SeqNum {
+        log.Println(p)
+        if p.currentState == PAXOS_PROPOSER_ROLE_TYPE {
             p.counter[message.Data]++
-            if p.counter[message.Data] > len(swarm) / 2 {
+            log.Println(p.counter)
+            log.Println(swarm)
+            if p.counter[message.Data] >= len(swarm) / 2 && p.paxosSeqNum == message.SeqNum {
                 p.currentValue = message.Data
-                acceptMessage := p.createAcceptMessage(p.currentValue)
+                acceptMessage := p.createAcceptMessage(message.Data)
                 p.sendPaxosMessage(acceptMessage)
                 log.Printf("Setting accepted global value: ", message.Data)
                 p.reset()
-                return p.currentValue
+                return message.Data
             }
         }
     case PAXOS_ACCEPT_MESSAGE_TYPE:
@@ -112,13 +120,13 @@ func (p PaxosMessagePasser) handlePaxosMessage(message PaxosMessage) string {
             p.paxosSeqNum = message.SeqNum
             log.Printf("Setting accepted global value: ", message.Data)
             p.reset()
-            return p.currentValue
+            return message.Data
         }
     }
     return ""
 }
 
-func (p PaxosMessagePasser) reset() {
+func (p *PaxosMessagePasser) reset() {
     p.currentState = ""
     p.currentValue = ""
     p.currentSource = ""

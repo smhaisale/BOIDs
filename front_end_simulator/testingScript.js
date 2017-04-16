@@ -66,11 +66,6 @@ function makeSphereWithValue() {
 //Used in frontend to refresh drone positions
 function flipPause() {
     pause = !pause;
-    if (pause) {
-        document.getElementById("flipPause").innerHTML = "Resume";
-    } else {
-        document.getElementById("flipPause").innerHTML = "Pause";
-    }
     console.log("Paused: " + pause);
 }
 
@@ -84,15 +79,6 @@ function flipDebug() {
                 showPosition: true
             });
         }
-        /**
-        for (var i = 0; i < droneList.length; i++) {
-            Phoria.Entity.debug(droneList[i].sphere, {
-                showId: true,
-                showPosition: true
-            });
-        }
-        **/
-        document.getElementById("flipDebug").innerHTML = "Remove Debug Info";
     } else {
         for (var id in droneMap) {
             Phoria.Entity.debug(droneMap[id].sphere, {
@@ -100,15 +86,6 @@ function flipDebug() {
                 showPosition: false
             });
         }
-        /**
-        for (var i = 0; i < droneList.length; i++) {
-            Phoria.Entity.debug(droneList[i].sphere, {
-                showId: false,
-                showPosition: false
-            });
-        }
-        **/
-        document.getElementById("flipDebug").innerHTML = "Add Debug Info";
     }
     console.log("Debug: " + debug);
 }
@@ -337,7 +314,7 @@ function init()
         debug : false,
         address : '',
         id : '',
-        formPolygon: function() { console.log('Polygon')}
+        formPolygon: function() { formPolygon()}
     };
 
     // add GUI controls

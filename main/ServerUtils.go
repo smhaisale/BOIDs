@@ -85,6 +85,7 @@ func addDroneToServer(droneId string, droneAddress string) error {
 
 // Takes a URL and does a GET request with request body as the provided data. Returns response as a json string.
 func makeGetRequest(url string, data string) (string, error) {
+    log.Println("Make GET request to " + url + " with data " + data)
     req, err := http.NewRequest("GET", url, bytes.NewBufferString(data))
     if err != nil {
         return "", err
