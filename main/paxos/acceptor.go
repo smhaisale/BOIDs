@@ -65,7 +65,7 @@ func (a *Acceptor) receivePrepare(prepare Message) (Message, bool) {
 	m := Message{
 		Type: Promise,
 		From: a.id, To: prepare.From,
-		N:    a.promised.number(),
+		N: a.promised.number(),
 		// previously accepted proposal
 		PrevN: a.accept.N, Value: a.accept.Value,
 	}

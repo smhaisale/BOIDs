@@ -14,7 +14,7 @@ var NodeMap = map[string]Node{
 }
 
 // droneid: address
-var DroneNodeMap = map[string]string {
+var DroneNodeMap = map[string]string{
 	"drone1": "localhost:12345",
 	"drone2": "localhost:12346",
 	"drone3": "localhost:12347",
@@ -26,7 +26,7 @@ var ENVIRONMENT_GET_ALL_DRONES_URL = "/getAllDrones"
 var ENVIRONMENT_ADD_DRONE_URL = "/addDrone"
 var ENVIRONMENT_KILL_DRONE_URL = "/killDrone"
 
-var DRONE_ADD_DRONE_URL = "/killDrone"
+var DRONE_ADD_DRONE_URL = "/addDrone"
 var DRONE_GET_INFO_URL = "/getDroneInfo"
 var DRONE_UPDATE_SWARM_INFO_URL = "/updateSwarmInfo"
 var DRONE_MOVE_TO_POSITION_URL = "/moveToPosition"

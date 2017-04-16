@@ -1,57 +1,60 @@
 package main
 
 import (
-    "fmt"
-    "net/http"
-    "log"
-    "strconv"
-    "time"
-    "./paxos"
+	"./paxos"
+	"fmt"
+	"log"
+	"net/http"
+	"strconv"
 	"strings"
+	"time"
+	"reflect"
+	"net/url"
 )
 
 var droneObject DroneObject
 var drone Drone
-var Swarm map[string]Drone
+var Swarm = make(map[string]Drone)
 
 type MulticastRequestKey struct {
 	OriginalSender string
-	GroupSeqNum int
+	GroupSeqNum    int
 }
-var haveSeenMap map[MulticastRequestKey]bool
+var haveSeenMap = make(map[MulticastRequestKey]bool)
 
-var DroneId string
-
-var input_position = map[string]Position {
-    "Drone0" : Position{0, 10, 0},
-    "Drone1" : Position{0, 20, 0},
-    "Drone2" : Position{0, 30, 0},
-    "Drone3" : Position{0, 40, 0},
-    "Drone4" : Position{0, 50, 0},
-    "Drone5" : Position{0, 60, 0},
+var input_position = map[string]Position{
+	"Drone0": Position{0, 10, 0},
+	"Drone1": Position{0, 20, 0},
+	"Drone2": Position{0, 30, 0},
+	"Drone3": Position{0, 40, 0},
+	"Drone4": Position{0, 50, 0},
+	"Drone5": Position{0, 60, 0},
 }
 
 func main() {
 
-    var droneId, port, paxosRole string
-    fmt.Println("Provide drone ID, port, paxosRole: ")
-    fmt.Scanf("%s %s", &droneId, &port, &paxosRole)
+	var droneId, port, paxosRole string
+	fmt.Println("Provide drone ID, port, paxosRole: ")
+	fmt.Scanf("%s %s", &droneId, &port, &paxosRole)
 
-    http.HandleFunc(DRONE_HEARTBEAT_URL, heartbeat)
-    http.HandleFunc(DRONE_GET_INFO_URL, getDroneInfo)
-    http.HandleFunc(DRONE_UPDATE_SWARM_INFO_URL, updateSwarmInfo)
-    http.HandleFunc(DRONE_MOVE_TO_POSITION_URL, moveToPosition)
-    http.HandleFunc(DRONE_ADD_DRONE_URL, addNewDroneToSwarm)
-    http.HandleFunc(DRONE_PAXOS_MESSAGE_URL, handlePaxosMessage)
+	http.HandleFunc(DRONE_HEARTBEAT_URL, heartbeat)
+	http.HandleFunc(DRONE_GET_INFO_URL, getDroneInfo)
+	http.HandleFunc(DRONE_UPDATE_SWARM_INFO_URL, updateSwarmInfo)
+	http.HandleFunc(DRONE_MOVE_TO_POSITION_URL, moveToPosition)
+	http.HandleFunc(DRONE_ADD_DRONE_URL, addNewDroneToSwarm)
+	http.HandleFunc(DRONE_PAXOS_MESSAGE_URL, handlePaxosMessage)
+	http.HandleFunc("/getswarm", getSwarm)
+	http.HandleFunc("/multicast", multi)
 
-    droneObject = DroneObject{Position{0, 0, 0}, DroneType{"0", "normal", Dimensions{1, 2, 3}, Dimensions{1, 2, 3}, Speed{1, 2, 3}}, Speed{1, 2, 3}}
-    drone = Drone{droneId, "localhost:" + port, paxosRole, droneObject}
-    // Start the environment server on localhost port 18841 and log any errors
-    log.Println("http server started on :" + port)
-    err := http.ListenAndServe(":" + port, nil)
-    if err != nil {
-        log.Fatal("ListenAndServe: ", err)
-    }
+	droneObject = DroneObject{Position{0, 0, 0}, DroneType{"0", "normal", Dimensions{1, 2, 3}, Dimensions{1, 2, 3}, Speed{1, 2, 3}}, Speed{1, 2, 3}}
+	drone = Drone{droneId, "localhost:" + port, paxosRole, droneObject}
+	// Start the environment server on localhost port 18841 and log any errors
+	Swarm[droneId] = drone
+	log.Println("http server started on :" + port)
+	err := http.ListenAndServe(":"+port, nil)
+	if err != nil {
+		log.Fatal("ListenAndServe: ", err)
+	}
 }
 
 //func moveDrone(newPos Position, speed Speed) {
@@ -71,47 +74,64 @@ func main() {
 //}
 
 func moveDrone(newPos Position, t float64) {
-    log.Println("Moving to ", newPos)
-    oldPos := droneObject.Pos
-    for {
-        if newPos.X == droneObject.Pos.X && newPos.Y == droneObject.Pos.Y && newPos.Z == droneObject.Pos.Z {
-            break
-        }
-        droneObject.Pos.X += (newPos.X - oldPos.X) / t
-        droneObject.Pos.Y += (newPos.Y - oldPos.Y) / t
-        droneObject.Pos.Z += (newPos.Z - oldPos.Z) / t
-        time.Sleep(time.Duration(1000000000))
-        drone.DroneObject = droneObject;
-    }
-    log.Println("DroneObject in moveDrone", droneObject)
+	log.Println("Moving to ", newPos)
+	oldPos := droneObject.Pos
+	for {
+		if newPos.X == droneObject.Pos.X && newPos.Y == droneObject.Pos.Y && newPos.Z == droneObject.Pos.Z {
+			break
+		}
+		droneObject.Pos.X += (newPos.X - oldPos.X) / t
+		droneObject.Pos.Y += (newPos.Y - oldPos.Y) / t
+		droneObject.Pos.Z += (newPos.Z - oldPos.Z) / t
+		time.Sleep(time.Duration(1000000000))
+		drone.DroneObject = droneObject
+	}
+	log.Println("DroneObject in moveDrone", droneObject)
 
 }
 
 func heartbeat(w http.ResponseWriter, r *http.Request) {
-    w.Header().Set("Access-Control-Allow-Origin", "*")
-    w.Write([]byte(toJsonString(drone.ID)))
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Write([]byte(toJsonString(drone.ID)))
 }
 
 func getDroneInfo(w http.ResponseWriter, r *http.Request) {
-   // log.Println("Drone.droneObject in getDroneInfo ", drone.droneObject)
-   // log.Println("DroneObject in moveDrone ", droneObject)
-    w.Header().Set("Access-Control-Allow-Origin", "*")
-    w.Write([]byte(toJsonString(drone)))
+	// log.Println("Drone.droneObject in getDroneInfo ", drone.droneObject)
+	// log.Println("DroneObject in moveDrone ", droneObject)
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Write([]byte(toJsonString(drone)))
 }
 
 func updateSwarmInfo(w http.ResponseWriter, r *http.Request) {
-    //w.Header().Set("Access-Control-Allow-Origin", "*")
-    //w.Write([]byte(toJsonString(drone)))
+	//w.Header().Set("Access-Control-Allow-Origin", "*")
+	//w.Write([]byte(toJsonString(drone)))
+}
+
+func getSwarm(w http.ResponseWriter, r *http.Request) {
+	keys := reflect.ValueOf(Swarm).MapKeys()
+	strkeys := make([]string, len(keys))
+	for i := 0; i < len(keys); i++ {
+		strkeys[i] = keys[i].String()
+	}
+	w.Write([]byte(toJsonString(strkeys)))
+}
+
+func multi(w http.ResponseWriter, r *http.Request) {
+	port := r.URL.Query().Get("port")
+	param := url.Values{}
+	param.Set("type", "multicast")
+	param.Add("address", "localhost:" + port)
+	Multicast("drone1", "drone2", DRONE_ADD_DRONE_URL, param,"none")
 }
 
 func moveToPosition(w http.ResponseWriter, r *http.Request) {
-   // log.Println("Drone.droneObject in moveToPosition ", drone.droneObject)
-  //  log.Println("DroneObject in moveToPosition ", droneObject)
-    values := r.URL.Query()
-    x, _ := strconv.ParseFloat(values.Get("X"), 64)
-    y, _ := strconv.ParseFloat(values.Get("Y"), 64)
-    z, _ := strconv.ParseFloat(values.Get("Z"), 64)
-    moveDrone(Position{x, y, z}, 20)
+	// log.Println("Drone.droneObject in moveToPosition ", drone.droneObject)
+	//  log.Println("DroneObject in moveToPosition ", droneObject)
+	values := r.URL.Query()
+	x, _ := strconv.ParseFloat(values.Get("X"), 64)
+	y, _ := strconv.ParseFloat(values.Get("Y"), 64)
+	z, _ := strconv.ParseFloat(values.Get("Z"), 64)
+	moveDrone(Position{x, y, z}, 20)
 }
 
 func addNewDroneToSwarm(w http.ResponseWriter, r *http.Request) {
@@ -120,24 +140,33 @@ func addNewDroneToSwarm(w http.ResponseWriter, r *http.Request) {
 		msg := MulticastMessage{}
 		getRequestBody(&msg, r)
 		seenMsgKey := MulticastRequestKey{msg.OriginalSender, msg.GroupSeqNum}
+		log.Println("message")
 		if !haveSeenMap[seenMsgKey] {
 			address := r.URL.Query().Get("address")
-
-			if strings.Compare(DroneId, msg.OriginalSender) != 0 {
-				Multicast(msg.OriginalSender, msg.GroupName, DRONE_ADD_DRONE_URL, r.URL.Query(), msg.MessageData)
-			}
-			haveSeenMap[seenMsgKey] = true
-
 			newDrone, err := getDroneFromServer(address)
 			if err != nil {
 				log.Println("Error! ", err)
 			} else {
 				Swarm[newDrone.ID] = newDrone
-				fmt.Println("multicast: ")
-				fmt.Println(Swarm)
 			}
+			Multicast(msg.OriginalSender, msg.Destination, DRONE_ADD_DRONE_URL, r.URL.Query(), msg.MessageData)
+			haveSeenMap[seenMsgKey] = true
+		}
+	} else {
+		address := r.URL.Query().Get("address")
+		newDrone, err := getDroneFromServer(address)
+		if err != nil {
+			log.Println("Error! ", err)
+		} else {
+			Swarm[newDrone.ID] = newDrone
 		}
 	}
+	keys := reflect.ValueOf(Swarm).MapKeys()
+	strkeys := make([]string, len(keys))
+	for i := 0; i < len(keys); i++ {
+		strkeys[i] = keys[i].String()
+	}
+	w.Write([]byte(toJsonString(strkeys)))
 }
 
 func sendPaxosMessage(droneId string, paxosMessage paxos.Message) {

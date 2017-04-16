@@ -45,10 +45,10 @@ type DroneObject struct {
 
 // System representation of a drone including ID, URL, paxos role etc.
 type Drone struct {
-	ID			string		`json: "id"`
-	Address		string		`json: "address"`
-	paxosRole	string		`json: "paxosRole"`
-	DroneObject	DroneObject	`json: "droneObject"`
+	ID          string      `json: "id"`
+	Address     string      `json: "address"`
+	paxosRole   string      `json: "paxosRole"`
+	DroneObject DroneObject `json: "droneObject"`
 }
 
 func (d Drone) moveTo(newPos Position, speed Speed) (time float64) {
