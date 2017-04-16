@@ -6,11 +6,13 @@ import (
     "log"
     "strconv"
     "time"
+    "./paxos"
 )
 
 var droneObject DroneObject
 var drone Drone
 var swarm map[string]Drone
+
 var input_position = map[string]Position {
     "Drone0" : Position{0, 10, 0},
     "Drone1" : Position{0, 20, 0},
@@ -31,6 +33,7 @@ func main() {
     http.HandleFunc(DRONE_UPDATE_SWARM_INFO_URL, updateSwarmInfo)
     http.HandleFunc(DRONE_MOVE_TO_POSITION_URL, moveToPosition)
     http.HandleFunc(DRONE_ADD_DRONE_URL, addNewDroneToSwarm)
+    http.HandleFunc(DRONE_PAXOS_MESSAGE_URL, handlePaxosMessage)
 
     droneObject = DroneObject{Position{0, 0, 0}, DroneType{"0", "normal", Dimensions{1, 2, 3}, Dimensions{1, 2, 3}, Speed{1, 2, 3}}, Speed{1, 2, 3}}
     drone = Drone{droneId, "localhost:" + port, paxosRole, droneObject}
@@ -103,4 +106,12 @@ func addNewDroneToSwarm(w http.ResponseWriter, r *http.Request) {
     } else {
         swarm[newDrone.ID] = newDrone
     }
+}
+
+func sendPaxosMessage(droneId string, paxosMessage paxos.Message) {
+    
+}
+
+func handlePaxosMessage(w http.ResponseWriter, r *http.Request) {
+
 }

@@ -9,33 +9,33 @@ const (
 	Accept
 )
 
-type message struct {
-	from, to int
-	typ      msgType
-	n        int
-	prevn    int
-	value    string
+type Message struct {
+	From, To int
+	Type     msgType
+	N        int
+	PrevN    int
+	Value    string
 }
 
-func (m message) number() int {
-	return m.n
+func (m Message) number() int {
+	return m.N
 }
 
-func (m message) proposalValue() string {
-	switch m.typ {
+func (m Message) proposalValue() string {
+	switch m.Type {
 	case Promise, Accept:
-		return m.value
+		return m.Value
 	default:
 		panic("unexpected proposalV")
 	}
 }
 
-func (m message) proposalNumber() int {
-	switch m.typ {
+func (m Message) proposalNumber() int {
+	switch m.Type {
 	case Promise:
-		return m.prevn
+		return m.PrevN
 	case Accept:
-		return m.n
+		return m.N
 	default:
 		panic("unexpected proposalN")
 	}

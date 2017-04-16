@@ -5,57 +5,57 @@ import (
 	"time"
 )
 
-type learner struct {
+type Learner struct {
 	id        int
 	acceptors map[int]accept
 
-	nt network
+	nt Network
 }
 
-func newLearner(id int, nt network, acceptors ...int) *learner {
-	l := &learner{id: id, nt: nt, acceptors: make(map[int]accept)}
+func newLearner(id int, nt Network, acceptors ...int) *Learner {
+	l := &Learner{id: id, nt: nt, acceptors: make(map[int]accept)}
 	for _, a := range acceptors {
-		l.acceptors[a] = message{typ: Accept}
+		l.acceptors[a] = Message{Type: Accept}
 	}
 	return l
 }
 
-// A value is learned when a single proposal with that value has been accepted by
+// A Value is learned when a single proposal with that Value has been accepted by
 // a majority of the acceptors.
-func (l *learner) learn() string {
+func (l *Learner) learn() string {
 	for {
 		m, ok := l.nt.recv(time.Hour)
 		if !ok {
 			continue
 		}
-		if m.typ != Accept {
-			log.Panicf("learner: %d received unexpected msg %+v", l.id, m)
+		if m.Type != Accept {
+			log.Panicf("Learner: %d received unexpected msg %+v", l.id, m)
 		}
 		l.receiveAccepted(m)
 		accept, ok := l.chosen()
 		if !ok {
 			continue
 		}
-		log.Printf("learner: %d learned the chosen propose %+v", l.id, accept)
+		log.Printf("Learner: %d learned the chosen propose %+v", l.id, accept)
 		return accept.proposalValue()
 	}
 }
 
-func (l *learner) receiveAccepted(accepted message) {
-	a := l.acceptors[accepted.from]
-	if a.proposalNumber() < accepted.n {
-		log.Printf("learner: %d received a new accepted proposal %+v", l.id, accepted)
-		l.acceptors[accepted.from] = accepted
+func (l *Learner) receiveAccepted(accepted Message) {
+	a := l.acceptors[accepted.From]
+	if a.proposalNumber() < accepted.N {
+		log.Printf("Learner: %d received a new accepted proposal %+v", l.id, accepted)
+		l.acceptors[accepted.From] = accepted
 	}
 }
 
-func (l *learner) majority() int { return len(l.acceptors)/2 + 1 }
+func (l *Learner) majority() int { return len(l.acceptors)/2 + 1 }
 
 // A proposal is chosen when it has been accepted by a majority of the
 // acceptors.
 // The leader might choose multiple proposals when it learns multiple times,
-// but we guarantee that all chosen proposals have the same value.
-func (l *learner) chosen() (accept, bool) {
+// but we guarantee that all chosen proposals have the same Value.
+func (l *Learner) chosen() (accept, bool) {
 	counts := make(map[int]int)
 	accepteds := make(map[int]accept)
 
@@ -71,5 +71,5 @@ func (l *learner) chosen() (accept, bool) {
 			return accepteds[n], true
 		}
 	}
-	return message{}, false
+	return Message{}, false
 }
