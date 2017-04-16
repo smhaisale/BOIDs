@@ -74,7 +74,7 @@ func moveDrone(newPos Position, t float64) {
     log.Println("Moving to ", newPos)
     oldPos := droneObject.Pos
     for {
-        if newPos.X == droneObject.Pos.X && newPos.Y == droneObject.Pos.Y && newPos.Z == droneObject.Pos.Z {
+        if newPos.X <= droneObject.Pos.X && newPos.Y <= droneObject.Pos.Y && newPos.Z <= droneObject.Pos.Z {
             break
         }
         droneObject.Pos.X += (newPos.X - oldPos.X) / t
