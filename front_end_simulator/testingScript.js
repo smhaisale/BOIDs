@@ -127,7 +127,7 @@ function flipDebug() {
 
 function addDroneToEnvironment() {
     var address = document.getElementById("droneAddress").value;
-    var addDroneUrl = 'http://localhost:18842/addDrone?messageType=type&data=' + address;
+    var addDroneUrl = 'http://localhost:18842/addDrone?messageType=type&data=localhost:' + address;
 
     console.log(addDroneUrl);
     $.ajax({
@@ -139,6 +139,19 @@ function addDroneToEnvironment() {
     }
 });
 
+}
+
+function formPolygon() {
+    var shape = document.getElementById('polygonName').value;
+    if (shape === "square") {
+        console.log("form a square");
+    } else if (shape === "triangle") {
+        console.log("form a triangle");
+    } else if (shape === "hexagon") {
+        console.log("form a hexagon");
+    } else {
+        console.log("unknown shape");
+    }
 }
 
 function removeDroneFromEnvironment() {
@@ -185,28 +198,12 @@ function updateDronePositions() {
 
                         drone.sphere = sphere;
                         droneMap[object.ID] = drone;
-
-                    /**
-                    if (droneList.length <= i) {
-                        var drone = new Drone(object.ID, object.pos.X, object.pos.Y, object.pos.Z);
-                        var sphere = createSphere(object.ID, drone.size, drone.currentX, drone.currentY, drone.currentZ);
-                        sphereList.push(sphere);
-                        scene.graph.push(sphere);
-
-                        drone.sphere = sphere;
-                        droneList.push(drone);
-                        **/
                     } else {
                         var currentDrone = droneMap[object.ID];
                         if (currentDrone.X != object.DroneObject.pos.X || currentDrone.Y != object.DroneObject.pos.Y || currentDrone.Z != object.DroneObject.pos.Z) {
                             currentDrone.setCoordinate(object.DroneObject.pos.X, object.DroneObject.pos.Y, object.DroneObject.pos.Z);
                         }
-                        /**
-                        var currentDrone = droneList[i];
-                        if (currentDrone.X != object.pos.X || currentDrone.Y != object.pos.Y || currentDrone.Z != object.pos.Z) {
-                            currentDrone.setCoordinate(object.pos.X, object.pos.Y, object.pos.Z);
-                        }
-                        **/
+
                     }
                 }
                 setTimeout(updateDronePositions, 1000);
