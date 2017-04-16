@@ -72,7 +72,10 @@ func moveDrone(newPos Position, t float64) {
         droneObject.Pos.Y += (newPos.Y - oldPos.Y) / t
         droneObject.Pos.Z += (newPos.Z - oldPos.Z) / t
         time.Sleep(time.Duration(1000000000))
+        drone.DroneObject = droneObject;
     }
+    log.Println("DroneObject in moveDrone", droneObject)
+
 }
 
 func heartbeat(w http.ResponseWriter, r *http.Request) {
@@ -81,6 +84,8 @@ func heartbeat(w http.ResponseWriter, r *http.Request) {
 }
 
 func getDroneInfo(w http.ResponseWriter, r *http.Request) {
+   // log.Println("Drone.droneObject in getDroneInfo ", drone.droneObject)
+   // log.Println("DroneObject in moveDrone ", droneObject)
     w.Header().Set("Access-Control-Allow-Origin", "*")
     w.Write([]byte(toJsonString(drone)))
 }
@@ -91,6 +96,8 @@ func updateSwarmInfo(w http.ResponseWriter, r *http.Request) {
 }
 
 func moveToPosition(w http.ResponseWriter, r *http.Request) {
+   // log.Println("Drone.droneObject in moveToPosition ", drone.droneObject)
+  //  log.Println("DroneObject in moveToPosition ", droneObject)
     values := r.URL.Query()
     x, _ := strconv.ParseFloat(values.Get("X"), 64)
     y, _ := strconv.ParseFloat(values.Get("Y"), 64)

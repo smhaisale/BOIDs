@@ -17,9 +17,11 @@
 <body style="background-color: #bfbfbf">
 <canvas id="canvas" width="768" height="512" style="background-color: #eee"></canvas>
 <form>
+    <!--
     Enter size, x, y, z, of sphere<br>
     <input id="values" type="text" /><br>
     <button name="data" type="button" onClick="makeSphereWithValue()">Submit</button>
+-->
 
     <br />
     <br />
@@ -28,8 +30,15 @@
 
     <br />
     <br />
+    <input id="polygonName" placeholder="Square, etc." type="text" />
+    <button name="polygon" type="button" onClick="formPolygon()">Form Polygon</button>
+
+<!--
+    <br />
+    <br />
     <input id="droneId" placeholder="Drone ID" type="text" />
     <button name="removeDrone" type="button" onClick="removeDroneFromEnvironment()">Kill Drone</button>
+-->
 
 </form>
 <br>
