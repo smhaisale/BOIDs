@@ -6,6 +6,7 @@ import (
     "strconv"
     "time"
     "log"
+    "math"
 )
 
 var droneObject DroneObject = DroneObject{}
@@ -77,7 +78,7 @@ func moveDrone(newPos Position, t float64) {
     log.Println("Moving to ", newPos)
     oldPos := droneObject.Pos
     for {
-        if newPos.X <= droneObject.Pos.X && newPos.Y <= droneObject.Pos.Y && newPos.Z <= droneObject.Pos.Z {
+        if math.Abs(newPos.X) == math.Abs(droneObject.Pos.X) && math.Abs(newPos.Y) == math.Abs(droneObject.Pos.Y) && math.Abs(newPos.Z) <= math.Abs(droneObject.Pos.Z) {
             break
         }
         droneObject.Pos.X += (newPos.X - oldPos.X) / t
