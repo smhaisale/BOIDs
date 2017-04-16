@@ -38,6 +38,7 @@ func createPrepareMessage(data string) (message PaxosMessage) {
     currentState = PAXOS_PROPOSER_ROLE_TYPE
     message.Source = drone.ID
     message.Type = PAXOS_PREPARE_MESSAGE_TYPE
+    paxosSeqNum++
     message.SeqNum = paxosSeqNum
     message.Data = data
 
@@ -48,6 +49,7 @@ func createPrepareMessage(data string) (message PaxosMessage) {
 func createPromiseMessage(dest string, data string) (message PaxosMessage) {
     message.Destination = dest
     message.Type = PAXOS_PROMISE_MESSAGE_TYPE
+    message.SeqNum = paxosSeqNum
     message.Data = data
 
     log.Println("Created promise message: ", message)
@@ -57,7 +59,7 @@ func createPromiseMessage(dest string, data string) (message PaxosMessage) {
 func createAcceptMessage(data string) (message PaxosMessage) {
     message.Source = drone.ID
     message.Type = PAXOS_ACCEPT_MESSAGE_TYPE
-    message.SeqNum = paxosSeqNum + 1
+    message.SeqNum = paxosSeqNum
     message.Data = data
 
     log.Println("Created accept message: ", message)
@@ -79,7 +81,7 @@ func handlePaxosMessage(w http.ResponseWriter, r *http.Request) {
     message := PaxosMessage{}
     getRequestBody(&message, r)
 
-    if message.SeqNum > paxosSeqNum{
+    if message.SeqNum >= paxosSeqNum{
         log.Println("Received Paxos message: ", message)
     }
 
@@ -99,7 +101,7 @@ func handlePaxosMessage(w http.ResponseWriter, r *http.Request) {
             }
         }
     case PAXOS_PROMISE_MESSAGE_TYPE:
-        if currentState == PAXOS_PROPOSER_ROLE_TYPE {
+        if currentState == PAXOS_PROPOSER_ROLE_TYPE && paxosSeqNum == message.SeqNum {
             counter[message.Data]++
             if counter[message.Data] > len(swarm) / 2 {
                 currentValue = message.Data
@@ -111,10 +113,12 @@ func handlePaxosMessage(w http.ResponseWriter, r *http.Request) {
             }
         }
     case PAXOS_ACCEPT_MESSAGE_TYPE:
-        paxosSeqNum = max(paxosSeqNum, message.SeqNum)
-        log.Printf("Setting accepted global value: ", message.Data)
-        // Set accepted values according to message
-        reset()
+        if paxosSeqNum <= message.SeqNum {
+            paxosSeqNum = message.SeqNum
+            log.Printf("Setting accepted global value: ", message.Data)
+            // Set accepted values according to message
+            reset()
+        }
     }
 }
 
@@ -123,5 +127,4 @@ func reset() {
     currentValue = ""
     currentSource = ""
     counter = make(map[string]int)
-    paxosSeqNum++
 }
