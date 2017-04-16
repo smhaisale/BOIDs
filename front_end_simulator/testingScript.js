@@ -10,14 +10,6 @@ var requestAnimFrame = window.requestAnimationFrame || window.webkitRequestAnima
 // bind to window onload event
 window.addEventListener('load', onloadHandler, false);
 
-// var testData = [{"ID":"drone1","pos":{"X":0,"Y":0,"Z":0},"type":{"TypeId":"type1","TypeDescription":"Simple sample drone type","Size":{"DX":1,"DY":1,"DZ":1},"MaxRange":{"DX":10,"DY":10,"DZ":10},"MaxSpeed":{"VX":10,"VY":10,"VZ":10}},"speed":{"VX":2,"VY":1,"VZ":-1}},
-//     {"ID":"drone2","pos":{"X":0,"Y":0,"Z":0},"type":{"TypeId":"type1","TypeDescription":"Simple sample drone type","Size":{"DX":1,"DY":1,"DZ":1},"MaxRange":{"DX":10,"DY":10,"DZ":10},"MaxSpeed":{"VX":10,"VY":10,"VZ":10}},"speed":{"VX":2,"VY":1,"VZ":-1}},
-//     {"ID":"drone3","pos":{"X":0,"Y":0,"Z":0},"type":{"TypeId":"type1","TypeDescription":"Simple sample drone type","Size":{"DX":1,"DY":1,"DZ":1},"MaxRange":{"DX":10,"DY":10,"DZ":10},"MaxSpeed":{"VX":10,"VY":10,"VZ":10}},"speed":{"VX":2,"VY":1,"VZ":-1}}];
-//
-// var testData2 = [{"ID":"drone1","pos":{"X":-1,"Y":-1,"Z":-1},"type":{"TypeId":"type1","TypeDescription":"Simple sample drone type","Size":{"DX":1,"DY":1,"DZ":1},"MaxRange":{"DX":10,"DY":10,"DZ":10},"MaxSpeed":{"VX":10,"VY":10,"VZ":10}},"speed":{"VX":2,"VY":1,"VZ":-1}},
-//     {"ID":"drone2","pos":{"X":-2,"Y":-2,"Z":-2},"type":{"TypeId":"type1","TypeDescription":"Simple sample drone type","Size":{"DX":1,"DY":1,"DZ":1},"MaxRange":{"DX":10,"DY":10,"DZ":10},"MaxSpeed":{"VX":10,"VY":10,"VZ":10}},"speed":{"VX":2,"VY":1,"VZ":-1}},
-//     {"ID":"drone3","pos":{"X":-3,"Y":-3,"Z":-3},"type":{"TypeId":"type1","TypeDescription":"Simple sample drone type","Size":{"DX":1,"DY":1,"DZ":1},"MaxRange":{"DX":10,"DY":10,"DZ":10},"MaxSpeed":{"VX":10,"VY":10,"VZ":10}},"speed":{"VX":2,"VY":1,"VZ":-1}}];
-
 var bitmaps = [];
 var scene = new Phoria.Scene();
 var sphereList = [];
@@ -69,10 +61,6 @@ function makeSphereWithValue() {
         pause = false;
 
     }
-
-    //var sphere = createSphere(parseFloat(data[0]), parseInt(data[1]), parseInt(data[2]), parseInt(data[3]));
-    //sphereList.push(sphereList);
-    //scene.graph.push(sphere);
 }
 
 //Used in frontend to refresh drone positions
@@ -125,8 +113,7 @@ function flipDebug() {
     console.log("Debug: " + debug);
 }
 
-function addDroneToEnvironment() {
-    var address = document.getElementById("droneAddress").value;
+function addDroneToEnvironment(address) {
     var addDroneUrl = 'http://localhost:18842/addDrone?messageType=type&data=localhost:' + address;
 
     console.log(addDroneUrl);
@@ -154,8 +141,7 @@ function formPolygon() {
     }
 }
 
-function removeDroneFromEnvironment() {
-    var address = document.getElementById("droneId").value;
+function removeDroneFromEnvironment(address) {
     // kill drone not implemented yet, call the function here when it's done
     //var addDroneUrl = 'http://localhost:18842/addDrone?messageType=type&data=' + address;
     /**
@@ -186,7 +172,6 @@ function updateDronePositions() {
                 for (key in droneMap) {
                     if (droneMap.hasOwnProperty(key)) mapSize++;
                 }
-                
 
                 for (var i = 0; i < data.length; i++) {
                     var object = data[i];
@@ -203,7 +188,6 @@ function updateDronePositions() {
                         if (currentDrone.X != object.DroneObject.pos.X || currentDrone.Y != object.DroneObject.pos.Y || currentDrone.Z != object.DroneObject.pos.Z) {
                             currentDrone.setCoordinate(object.DroneObject.pos.X, object.DroneObject.pos.Y, object.DroneObject.pos.Z);
                         }
-
                     }
                 }
                 setTimeout(updateDronePositions, 1000);
@@ -244,8 +228,8 @@ function init()
     document.body.style.overflow = "hidden";
 
     // get dimensions of window and resize the canvas to fit
-    // var width = window.innerWidth, height = window.innerHeight - 200;
-    // canvas.width = width; canvas.height = height;
+    var width = window.innerWidth, height = window.innerHeight;
+    canvas.width = width; canvas.height = height;
 
     // create the scene and setup camera, perspective and viewport
     scene.camera.position = {x:0, y:25.0, z:-60.0};
@@ -298,10 +282,10 @@ function init()
         mat4.rotateY(rotMatrix, rotMatrix, Math.sin(Date.now()/10000)*Phoria.RADIANS*360);
         vec4.transformMat4(position, position, rotMatrix);
     });
-
-    scene.graph.push(Phoria.DistantLight.create({
+    var light = Phoria.DistantLight.create({
         direction: {x:0, y:-0.5, z:1}
-    }));
+    });
+    scene.graph.push(light);
 
     var fnAnimate = function() {
         if (!pause)
@@ -348,12 +332,21 @@ function init()
      },
      */
 
+    var obj = { add:function(){ console.log("clicked") }};
+    var drone = {
+        start : false,
+        debug : false,
+        address : '',
+        id : '',
+        formPolygon: function() { console.log('Polygon')}
+    };
+
     // add GUI controls
     var gui = new dat.GUI();
     var f = gui.addFolder('Perspective');
     f.add(scene.perspective, "fov").min(5).max(175);
     f.add(scene.perspective, "near").min(1).max(100);
-    f.add(scene.perspective, "far").min(1).max(1000);
+    f.add(scene.perspective, "far").min(1).max(200);
     //f = gui.addFolder('Camera LookAt');
     //f.add(scene.camera.lookat, "x").min(-100).max(100);
     //f.add(scene.camera.lookat, "y").min(-100).max(100);
@@ -366,7 +359,21 @@ function init()
     f.add(scene.camera.up, "x").min(-10).max(10).step(0.1);
     f.add(scene.camera.up, "y").min(-10).max(10).step(0.1);
     f.add(scene.camera.up, "z").min(-10).max(10).step(0.1);
-
+    f = gui.addFolder('Light');
+    f.add(light.direction, "x").min(-25).max(25).step(0.1);
+    f.add(light.direction, "y").min(-25).max(25).step(0.1);
+    f.add(light.direction, "z").min(-25).max(25).step(0.1);
+    f.add(light.color, "0").min(0).max(1).step(0.1).name("red");
+    f.add(light.color, "1").min(0).max(1).step(0.1).name("green");
+    f.add(light.color, "2").min(0).max(1).step(0.1).name("blue");
+    f.add(light, "intensity").min(0).max(1).step(0.1);
+    f = gui.addFolder('Drone Controls')
+    f.add(drone, 'start').name('Running').onFinishChange(function(){flipPause()});
+    f.add(drone, 'debug').name('Show Debug Info').onFinishChange(function(){flipDebug()});
+    f.add(drone, 'address').name('Add Drone').onFinishChange(function(){addDroneToEnvironment(drone.address)});
+    f.add(drone, 'id').name('Kill Drone').onFinishChange(function(){addDroneToEnvironment(drone.id)});
+    f.add(drone, 'formPolygon').name('Form Polygon');
+    f.open();
     // start animation
     requestAnimFrame(fnAnimate);
 }
