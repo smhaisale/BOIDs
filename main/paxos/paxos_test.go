@@ -7,10 +7,10 @@ import (
 
 func TestPaxosWithSingleProposer(t *testing.T) {
 	// 1, 2, 3 are acceptors
-	// 1001 is a proposer
+	// 1001 is a Proposer
 	pn := newPaxosNetwork(1, 2, 3, 1001, 2001)
 
-	as := make([]*acceptor, 0)
+	as := make([]*Acceptor, 0)
 	for i := 1; i <= 3; i++ {
 		as = append(as, newAcceptor(i, pn.agentNetwork(i), 2001))
 	}
@@ -25,16 +25,16 @@ func TestPaxosWithSingleProposer(t *testing.T) {
 	l := newLearner(2001, pn.agentNetwork(2001), 1, 2, 3)
 	value := l.learn()
 	if value != "3D coordinates" {
-		t.Errorf("value = %s, want %s", value, "3D coordinates")
+		t.Errorf("Value = %s, want %s", value, "3D coordinates")
 	}
 }
 
 func TestPaxosWithTwoProposers(t *testing.T) {
 	// 1, 2, 3 are acceptors
-	// 1001,1002 is a proposer
+	// 1001,1002 is a Proposer
 	pn := newPaxosNetwork(1, 2, 3, 1001, 1002, 2001)
 
-	as := make([]*acceptor, 0)
+	as := make([]*Acceptor, 0)
 	for i := 1; i <= 3; i++ {
 		as = append(as, newAcceptor(i, pn.agentNetwork(i), 2001))
 	}
@@ -53,7 +53,7 @@ func TestPaxosWithTwoProposers(t *testing.T) {
 	l := newLearner(2001, pn.agentNetwork(2001), 1, 2, 3)
 	value := l.learn()
 	if value != "3D coordinates" {
-		t.Errorf("value = %s, want %s", value, "3D coordinates")
+		t.Errorf("Value = %s, want %s", value, "3D coordinates")
 	}
 	time.Sleep(time.Millisecond)
 }

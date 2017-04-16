@@ -5,8 +5,10 @@ import (
     "io/ioutil"
     "log"
     "encoding/json"
+    "bytes"
 )
 
+var client = http.Client{}
 
 type GetRequest struct {
     data string
@@ -63,14 +65,13 @@ func getResponseBody(msg interface {}, resp *http.Response) error {
     return err
 }
 
-func getDroneFromServer(droneAddress string) (Drone, error) {
+func getDroneFromServer(droneAddress string) (drone Drone, err error) {
     resp, err := client.Get("http://" + droneAddress + DRONE_GET_INFO_URL)
     if err != nil {
         log.Println("Error! ", err)
-        return nil, err
+        return
     }
-    drone := Drone{}
-    err = getResponseBody(drone, resp)
+    err = getResponseBody(&drone, resp)
     return drone, err
 }
 
@@ -82,20 +83,16 @@ func addDroneToServer(droneId string, droneAddress string) error {
     return err
 }
 
+// Takes a URL and does a GET request with request body as the provided data. Returns response as a json string.
 func makeGetRequest(url string, data string) (string, error) {
-    response, err := client.Get(url)
+    req, err := http.NewRequest("GET", url, bytes.NewBufferString(data))
+    if err != nil {
+        return "", err
+    }
+    response, err := client.Do(req)
+    body, err := ioutil.ReadAll(response.Body)
     if err != nil {
         log.Println("Error in making GET request! ", err)
     }
-    request := GetRequest{}
-    err = getResponseBody(request, response)
-    return request.data, err
-}
-
-func parseGetRequest(jsonData string) (data interface {}, err error) {
-    err = json.Unmarshal([]byte(jsonData), data)
-    if err != nil {
-        log.Printf("error: %v", err)
-    }
-    return data, err
+    return string(body), err
 }

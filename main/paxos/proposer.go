@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-type proposer struct {
+type Proposer struct {
 	id int
 	// stable
 	lastSeq int
@@ -14,20 +14,20 @@ type proposer struct {
 	valueN int
 
 	acceptors map[int]promise
-	nt        network
+	nt        Network
 }
 
-func newProposer(id int, value string, nt network, acceptors ...int) *proposer {
-	p := &proposer{id: id, nt: nt, lastSeq: 0, value: value, acceptors: make(map[int]promise)}
+func newProposer(id int, value string, nt Network, acceptors ...int) *Proposer {
+	p := &Proposer{id: id, nt: nt, lastSeq: 0, value: value, acceptors: make(map[int]promise)}
 	for _, a := range acceptors {
-		p.acceptors[a] = message{}
+		p.acceptors[a] = Message{}
 	}
 	return p
 }
 
-func (p *proposer) run() {
+func (p *Proposer) run() {
 	var ok bool
-	var m message
+	var m Message
 
 	// stage 1: do prepare until reach the majority
 	for !p.majorityReached() {
@@ -40,39 +40,39 @@ func (p *proposer) run() {
 		m, ok = p.nt.recv(time.Second)
 		if !ok {
 			// the previous prepare is failed
-			// continue to do another prepare
+			// continue To do another prepare
 			continue
 		}
 
-		switch m.typ {
+		switch m.Type {
 		case Promise:
 			p.receivePromise(m)
 		default:
-			log.Panicf("proposer: %d unexpected message type: ", p.id, m.typ)
+			log.Panicf("Proposer: %d unexpected Message type: ", p.id, m.Type)
 		}
 	}
-	log.Printf("proposer: %d promise %d reached majority %d", p.id, p.n(), p.majority())
+	log.Printf("Proposer: %d promise %d reached majority %d", p.id, p.n(), p.majority())
 
 	// stage 2: do propose
-	log.Printf("proposer: %d starts to propose [%d: %s]", p.id, p.n(), p.value)
+	log.Printf("Proposer: %d starts To propose [%d: %s]", p.id, p.n(), p.value)
 	ms := p.propose()
 	for i := range ms {
 		p.nt.send(ms[i])
 	}
 }
 
-// If the proposer receives the requested responses from a majority of
-// the acceptors, then it can issue a proposal with number n and value
-// v, where v is the value of the highest-numbered proposal among the
-// responses, or is any value selected by the proposer if the responders
+// If the Proposer receives the requested responses From a majority of
+// the acceptors, then it can issue a proposal with number N and Value
+// v, where v is the Value of the highest-numbered proposal among the
+// responses, or is any Value selected by the Proposer if the responders
 // reported no proposals.
-func (p *proposer) propose() []message {
-	ms := make([]message, p.majority())
+func (p *Proposer) propose() []Message {
+	ms := make([]Message, p.majority())
 
 	i := 0
 	for to, promise := range p.acceptors {
 		if promise.number() == p.n() {
-			ms[i] = message{from: p.id, to: to, typ: Propose, n: p.n(), value: p.value}
+			ms[i] = Message{From: p.id, To: to, Type: Propose, N: p.n(), Value: p.value}
 			i++
 		}
 		if i == p.majority() {
@@ -82,17 +82,17 @@ func (p *proposer) propose() []message {
 	return ms
 }
 
-// A proposer chooses a new proposal number n and sends a request to
-// each member of some set of acceptors, asking it to respond with:
-// (a) A promise never again to accept a proposal numbered less than n, and
-// (b) The proposal with the highest number less than n that it has accepted, if any.
-func (p *proposer) prepare() []message {
+// A Proposer chooses a new proposal number N and sends a request To
+// each member of some set of acceptors, asking it To respond with:
+// (a) A promise never again To accept a proposal numbered less than N, and
+// (b) The proposal with the highest number less than N that it has accepted, if any.
+func (p *Proposer) prepare() []Message {
 	p.lastSeq++
 
-	ms := make([]message, p.majority())
+	ms := make([]Message, p.majority())
 	i := 0
 	for to := range p.acceptors {
-		ms[i] = message{from: p.id, to: to, typ: Prepare, n: p.n()}
+		ms[i] = Message{From: p.id, To: to, Type: Prepare, N: p.n()}
 		i++
 		if i == p.majority() {
 			break
@@ -101,25 +101,25 @@ func (p *proposer) prepare() []message {
 	return ms
 }
 
-func (p *proposer) receivePromise(promise message) {
-	prevPromise := p.acceptors[promise.from]
+func (p *Proposer) receivePromise(promise Message) {
+	prevPromise := p.acceptors[promise.From]
 
 	if prevPromise.number() < promise.number() {
-		log.Printf("proposer: %d received a new promise %+v", p.id, promise)
-		p.acceptors[promise.from] = promise
+		log.Printf("Proposer: %d received a new promise %+v", p.id, promise)
+		p.acceptors[promise.From] = promise
 
-		//update value to the value with a larger N
+		//update Value To the Value with a larger N
 		if promise.proposalNumber() > p.valueN {
-			log.Printf("proposer: %d updated the value [%s] to %s", p.id, p.value, promise.proposalValue())
+			log.Printf("Proposer: %d updated the Value [%s] To %s", p.id, p.value, promise.proposalValue())
 			p.valueN = promise.proposalNumber()
 			p.value = promise.proposalValue()
 		}
 	}
 }
 
-func (p *proposer) majority() int { return len(p.acceptors)/2 + 1 }
+func (p *Proposer) majority() int { return len(p.acceptors)/2 + 1 }
 
-func (p *proposer) majorityReached() bool {
+func (p *Proposer) majorityReached() bool {
 	m := 0
 	for _, promise := range p.acceptors {
 		if promise.number() == p.n() {
@@ -132,4 +132,4 @@ func (p *proposer) majorityReached() bool {
 	return false
 }
 
-func (p *proposer) n() int { return p.lastSeq<<16 | p.id }
+func (p *Proposer) n() int { return p.lastSeq<<16 | p.id }

@@ -6,14 +6,8 @@ import (
     "math/rand"
 )
 
-type DroneInfo struct {
-    address string
-    drone Drone
-}
-
 // Get drone configuration from local cache instead of creating mock data.
-var droneInfoMap = map[string]DroneInfo {}
-var client = http.Client{}
+var droneMap = map[string]Drone {}
 
 type UIMessage struct {
     MessageType     string  `json:"messageType"`
@@ -46,13 +40,10 @@ func getAllDrones(w http.ResponseWriter, r *http.Request) {
     refreshDroneInfo()
 
     drones := []Drone{}
-    for _, droneInfo := range droneInfoMap {
-        drones = append(drones, droneInfo.drone)
+    for _, drone := range droneMap {
+        drones = append(drones, drone)
     }
 
-    //drones[0].ID = "drone1"
-    //x, y, z := getRandomCoordinates()
-    //drones[0].Pos = Position {x, y, z}
     w.Header().Set("Access-Control-Allow-Origin", "*")
     w.Write([]byte(toJsonString(drones)))
 }
@@ -64,7 +55,7 @@ func addDrone(w http.ResponseWriter, r *http.Request) {
     if err != nil {
         log.Println("Error! ", err)
     } else {
-        droneInfoMap[drone.ID] = DroneInfo{address, drone}
+        droneMap[drone.ID] = Drone{drone.ID, address, "", drone.DroneObject}
     }
 }
 
@@ -73,12 +64,12 @@ func killDrone(w http.ResponseWriter, r *http.Request) {
 }
 
 func refreshDroneInfo() {
-    for key, droneInfo := range droneInfoMap {
-        drone, err := getDroneFromServer(droneInfo.address)
+    for key, drone := range droneMap {
+        drone, err := getDroneFromServer(drone.Address)
         if err != nil {
             log.Println("Error in refreshDroneInfo()! ", err)
         } else {
-            droneInfoMap[key] = DroneInfo{droneInfo.address, drone}
+            droneMap[key] = Drone{drone.ID, drone.Address,"", drone.DroneObject}
         }
     }
 }

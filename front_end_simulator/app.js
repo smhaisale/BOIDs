@@ -9,7 +9,6 @@ app.use(express.static(__dirname));
 //app.use(express.static(__dirname + '/public/css'));
 //Store all JS and CSS in Scripts folder.
 
-
 // Add headers
 app.use(function (req, res, next) {
 
