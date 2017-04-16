@@ -88,3 +88,18 @@ func min(list ...int) int {
 	}
 	return min
 }
+
+func (d Drone) calculateCoordinates(n int) []Position{
+        var angle float64
+        angle = float64 (2) * math.Pi / float64(n)
+        posArray := make([]Position, n, 2*n)
+        //var posArray [n]Position
+        var x,y,z float64
+        for i := 0; i < n; i++ {
+               x = 0 + 10 * math.Sin(float64(i) * angle)
+               y = 5
+               z = 0 + 10 * math.Cos(float64(i) * angle)
+               posArray[i] = Position{ x, y, z }
+        }
+        return posArray
+}
