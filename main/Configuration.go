@@ -17,6 +17,7 @@ var ENVIRONMENT_GET_ALL_DRONES_URL = "/getAllDrones"
 var ENVIRONMENT_ADD_DRONE_URL = "/addDrone"
 var ENVIRONMENT_KILL_DRONE_URL = "/killDrone"
 var ENVIRONMENT_FORM_POLYGON_URL = "/formPolygon"
+var ENVIRONMENT_RANDOM_POSITIONS_URL = "/randomPositions"
 
 var DRONE_ADD_DRONE_URL = "/addDroneToSwarm"
 var DRONE_GET_INFO_URL = "/getDroneInfo"

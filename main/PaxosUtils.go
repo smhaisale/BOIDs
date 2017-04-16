@@ -72,10 +72,10 @@ func (p *PaxosMessagePasser) sendPaxosMessage(message PaxosMessage) {
     jsonData := toJsonString(message)
     for _, drone := range swarm {
         address := "http://" + drone.Address + DRONE_PAXOS_MESSAGE_URL
-        _, err := makeGetRequest(address, jsonData)
-        if err != nil {
-            log.Println("Error! ", err)
-        }
+        asyncGetRequest(address, jsonData)
+        //if err != nil {
+        //    log.Println("Error! ", err)
+        //}
     }
 }
 
@@ -95,10 +95,10 @@ func (p *PaxosMessagePasser) handlePaxosMessage(message PaxosMessage) string {
             p.currentState = PAXOS_PROMISER_ROLE_TYPE
             promiseMessage := p.createPromiseMessage(message.Source, p.currentValue)
             address := "http://" + swarm[message.Source].Address + DRONE_PAXOS_MESSAGE_URL
-            _, err := makeGetRequest(address, toJsonString(promiseMessage))
-            if err != nil {
-                log.Println("Error! ", err)
-            }
+            asyncGetRequest(address, toJsonString(promiseMessage))
+            //if err != nil {
+            //    log.Println("Error! ", err)
+            //}
         }
     case PAXOS_PROMISE_MESSAGE_TYPE:
         log.Println(p)

@@ -98,3 +98,16 @@ func makeGetRequest(url string, data string) (string, error) {
     }
     return string(body), err
 }
+
+// Takes a URL and does a GET request with request body as the provided data. Returns response as a json string.
+func asyncGetRequest(url string, data string) {
+    log.Println("Async GET request to " + url)
+    go func(url string) {
+        req, err := http.NewRequest("GET", url, bytes.NewBufferString(data))
+        resp, err := client.Do(req)
+        if err != nil {
+            log.Println("Error! ", err)
+        }
+        resp.Body.Close()
+    }(url)
+}
