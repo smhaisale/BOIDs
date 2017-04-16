@@ -8,7 +8,6 @@ import (
 
 type DroneInfo struct {
     address string
-    paxosRole string
     drone Drone
 }
 

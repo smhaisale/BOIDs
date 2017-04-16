@@ -98,3 +98,4 @@ func parseGetRequest(jsonData string) (data interface {}, err error) {
     }
     return data, err
 }
+

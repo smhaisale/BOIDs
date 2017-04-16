@@ -13,6 +13,19 @@ var NodeMap = map[string]Node{
 	"deb":   Node{"deb", "localhost", "12359"},
 }
 
+// droneid: address
+var DroneNodeMap = map[string]string {
+
+}
+
+// groupName: group of drones identified with their id
+var GroupMap = map[string][]string {
+
+}
+
+var MULTICAST_TYPE = "multicast"
+var ALLDRONES_GROUP = "all"
+
 var ENVIRONMENT_GET_ALL_DRONES_URL = "/getAllDrones"
 var ENVIRONMENT_ADD_DRONE_URL = "/addDrone"
 var ENVIRONMENT_KILL_DRONE_URL = "/killDrone"

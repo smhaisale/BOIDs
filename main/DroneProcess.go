@@ -6,16 +6,25 @@ import (
 	"net/http"
 	"strconv"
 	"time"
+	"strings"
 )
 
 var drone Drone
 var swarm map[string]Drone
 
+type MulticastRequestKey struct {
+	OriginalSender string
+	GroupSeqNum int
+}
+var haveSeenQueue map[MulticastRequestKey]bool
+
+var DroneId string
+
 func main() {
 
-	var droneId, port string
+	var port string
 	fmt.Println("Provide drone ID and port: ")
-	fmt.Scanf("%s %s", &droneId, &port)
+	fmt.Scanf("%s %s", &DroneId, &port)
 
 	http.HandleFunc(DRONE_HEARTBEAT_URL, heartbeat)
 	http.HandleFunc(DRONE_GET_INFO_URL, getDroneInfo)
@@ -23,7 +32,7 @@ func main() {
 	http.HandleFunc(DRONE_MOVE_TO_POSITION_URL, moveToPosition)
 	http.HandleFunc(DRONE_ADD_DRONE_URL, addNewDroneToSwarm)
 
-	drone = Drone{droneId, Position{0, 0, 0}, DroneType{"0", "normal", Dimensions{1, 2, 3}, Dimensions{1, 2, 3}, Speed{1, 2, 3}}, Speed{1, 2, 3}}
+	drone = Drone{DroneId, Position{0, 0, 0}, DroneType{"0", "normal", Dimensions{1, 2, 3}, Dimensions{1, 2, 3}, Speed{1, 2, 3}}, Speed{1, 2, 3}}
 
 	// Start the environment server on localhost port 18841 and log any errors
 	log.Println("http server started on :" + port)
@@ -76,6 +85,7 @@ func getDroneInfo(w http.ResponseWriter, r *http.Request) {
 func updateSwarmInfo(w http.ResponseWriter, r *http.Request) {
 	//w.Header().Set("Access-Control-Allow-Origin", "*")
 	//w.Write([]byte(toJsonString(drone)))
+
 }
 
 func moveToPosition(w http.ResponseWriter, r *http.Request) {
@@ -87,11 +97,36 @@ func moveToPosition(w http.ResponseWriter, r *http.Request) {
 }
 
 func addNewDroneToSwarm(w http.ResponseWriter, r *http.Request) {
-	address := r.URL.Query().Get("address")
-	newDrone, err := getDroneFromServer(address)
-	if err != nil {
-		log.Println("Error! ", err)
-	} else {
-		swarm[newDrone.ID] = newDrone
+	msgType := r.URL.Query().Get("type")
+	if strings.Compare(msgType, MULTICAST_TYPE) == 0 {
+		msg := MulticastMessage{}
+		getRequestBody(&msg, r)
+		members, ok := GroupMap[msg.GroupName]
+		var isMember bool = false
+		if ok {
+			for _, member := range members {
+				if strings.Compare(member, DroneId) {
+					isMember = true
+				}
+			}
+		}
+		if isMember {
+			seenMsgKey := MulticastRequestKey{msg.OriginalSender, msg.GroupSeqNum}
+			if !haveSeenQueue[seenMsgKey] {
+				address := r.URL.Query().Get("address")
+
+				if strings.Compare(DroneId, msg.OriginalSender) != 0 {
+					Multicast(msg.OriginalSender, msg.GroupName, DRONE_ADD_DRONE_URL, r.URL.Query(), msg.MessageData)
+				}
+				haveSeenQueue[seenMsgKey] = true
+
+				newDrone, err := getDroneFromServer(address)
+				if err != nil {
+					log.Println("Error! ", err)
+				} else {
+					swarm[newDrone.ID] = newDrone
+				}
+			}
+		}
 	}
 }

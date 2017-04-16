@@ -26,6 +26,13 @@ type MulticastData struct {
 	GroupName   string `json: "groupName"`
 }
 
+type MulticastMessage struct {
+	OriginalSender string
+	GroupName string
+	GroupSeqNum int
+	MessageData string
+}
+
 var sampleMulticastData = MulticastData{"multicastSource", "multicastDestination",
 	1, "groupName"}
 
