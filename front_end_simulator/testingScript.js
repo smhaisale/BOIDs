@@ -117,6 +117,18 @@ function formPolygon() {
     })
 }
 
+function randomPositions() {
+    var randomPositionsUrl = 'http://localhost:18842/randomPositions';
+    $.ajax({
+        type: 'GET',
+        dataType: 'json',
+        url: randomPositionsUrl,
+        success: function (data) {
+            console.log("Sent random positions request");
+        }
+    })
+}
+
 function removeDroneFromEnvironment(address) {
     // kill drone not implemented yet, call the function here when it's done
     //var addDroneUrl = 'http://localhost:18842/addDrone?messageType=type&data=' + address;
@@ -314,7 +326,8 @@ function init()
         debug : false,
         address : '',
         id : '',
-        formPolygon: function() { formPolygon()}
+        formPolygon: function() { formPolygon()},
+        randomPositions: function() { randomPositions()}
     };
 
     // add GUI controls
@@ -355,6 +368,7 @@ function init()
     f.add(drone, 'address').name('Add Drone').onFinishChange(function(){addDroneToEnvironment(drone.address)});
     f.add(drone, 'id').name('Kill Drone').onFinishChange(function(){addDroneToEnvironment(drone.id)});
     f.add(drone, 'formPolygon').name('Form Polygon');
+    f.add(drone, 'randomPositions').name('Random Positions');
     f.open();
 
     // start animation
