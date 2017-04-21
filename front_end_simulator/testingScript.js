@@ -59,7 +59,6 @@ function makeSphereWithValue() {
         droneList[i].dY = (droneList[i].newY - droneList[i].currentY) * droneList[i].speed;
         droneList[i].dZ = (droneList[i].newZ - droneList[i].currentZ) * droneList[i].speed;
         pause = false;
-
     }
 }
 
@@ -117,6 +116,49 @@ function formPolygon() {
     })
 }
 
+function randomPositions() {
+    var randomPositionsUrl = 'http://localhost:18842/randomPositions';
+    $.ajax({
+        type: 'GET',
+        dataType: 'json',
+        url: randomPositionsUrl,
+        success: function (data) {
+            console.log("Sent random positions request");
+        }
+    })
+}
+
+function setDronePosition(idPosition) {
+    console.log("setting the drone position");
+    var id = idPosition.substring(0,idPosition.indexOf(':'));
+    var position = idPosition.substring(idPosition.indexOf(':') + 1);
+    var positionData =  position.split(",");
+    var droneToChange = droneMap[id];
+    /**
+    console.log(position);
+    console.log(positionData);
+    console.log(positionData[0]);
+    console.log(droneToChange);
+
+    droneToChange.newX = parseFloat(positionData[0]);
+    droneToChange.newY = parseFloat(positionData[1]);
+    droneToChange.newZ = parseFloat(positionData[2]);
+    droneToChange.dX = (droneToChange.newX - droneToChange.currentX) * droneToChange.speed;
+    droneToChange.dY = (droneToChange.newY - droneToChange.currentY) * droneToChange.speed;
+    droneToChange.dZ = (droneToChange.newZ - droneToChange.currentZ) * droneToChange.speed;
+    **/
+    var droneAddress = droneToChange.address;
+    var formPolygonUrl = 'http://localhost:' + droneAddress + '/moveToPosition?X=' + positionData[0] + '&Y=' + positionData[1] + '&Z=' + positionData[2];
+    $.ajax({
+        type: 'GET',
+        dataType: 'json',
+        url: formPolygonUrl,
+        success: function (data) {
+            console.log("Sent new drone position request");
+        }
+    })
+}
+
 function removeDroneFromEnvironment(address) {
     // kill drone not implemented yet, call the function here when it's done
     //var addDroneUrl = 'http://localhost:18842/addDrone?messageType=type&data=' + address;
@@ -153,6 +195,8 @@ function updateDronePositions() {
                     var object = data[i];
                     if (mapSize <= i) {
                         var drone = new Drone(object.ID, object.DroneObject.pos.X, object.DroneObject.pos.Y, object.DroneObject.pos.Z);
+                        var droneAddress = object.Address;
+                        drone.address = droneAddress.substring(droneAddress.indexOf(':')+1);
                         var sphere = createSphere(object.ID, drone.size, drone.currentX, drone.currentY, drone.currentZ);
                         sphereList.push(sphere);
                         scene.graph.push(sphere);
@@ -253,11 +297,13 @@ function init()
     scene.graph.push(fnGenerateStarfield(500,2000));
 
     // rotate the camera around the scene
+    /**
     scene.onCamera(function(position, lookAt, up) {
         var rotMatrix = mat4.create();
         mat4.rotateY(rotMatrix, rotMatrix, Math.sin(Date.now()/10000)*Phoria.RADIANS*360);
         vec4.transformMat4(position, position, rotMatrix);
     });
+**/
     var light = Phoria.DistantLight.create({
         direction: {x:0, y:-0.5, z:1}
     });
@@ -314,7 +360,10 @@ function init()
         debug : false,
         address : '',
         id : '',
-        formPolygon: function() { formPolygon()}
+        position : '',
+        formPolygon: function() { formPolygon()},
+        randomPositions: function() { randomPositions()},
+        setDronePosition: function() { setDronePosition()}
     };
 
     // add GUI controls
@@ -354,7 +403,9 @@ function init()
     f.add(drone, 'debug').name('Show Debug Info').onFinishChange(function(){flipDebug()});
     f.add(drone, 'address').name('Add Drone').onFinishChange(function(){addDroneToEnvironment(drone.address)});
     f.add(drone, 'id').name('Kill Drone').onFinishChange(function(){addDroneToEnvironment(drone.id)});
+    f.add(drone, 'position').name('Set drone position').onFinishChange(function(){setDronePosition(drone.position)});
     f.add(drone, 'formPolygon').name('Form Polygon');
+    f.add(drone, 'randomPositions').name('Random Positions');
     f.open();
 
     // start animation

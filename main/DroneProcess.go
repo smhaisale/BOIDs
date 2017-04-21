@@ -156,7 +156,7 @@ func handlePaxosMessage(w http.ResponseWriter, r *http.Request) {
             log.Println("Handle Paxos Message result : " + result)
             instruction := MoveInstruction{}
             fromJsonString(&instruction, result)
-            moveDrone(instruction.Positions[drone.ID], 10)
+            moveDrone(instruction.Positions[drone.ID], 5)
         }
     }
     w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -164,13 +164,14 @@ func handlePaxosMessage(w http.ResponseWriter, r *http.Request) {
 
 func droneFormPolygon(w http.ResponseWriter, r *http.Request) {
     log.Println("Received form polygon request at " + drone.ID)
-    index, positions := 0, calculateCoordinates(len(swarm))
+    index, positions := 0, calculateCoordinates(len(swarm)+1)
     instruction := MoveInstruction{}
     instruction.Positions = map[string]Position{}
     for _, swarmDrone := range swarm {
         instruction.Positions[swarmDrone.ID] = positions[index]
         index++
     }
-    instruction.Positions[drone.ID] = positions[len(swarm)]
+    instruction.Positions[drone.ID] = positions[index]
     message := formPolygonPaxosClient.createPrepareMessage(toJsonString(instruction))
     formPolygonPaxosClient.sendPaxosMessage(message)
+}
