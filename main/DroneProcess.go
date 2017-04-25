@@ -43,6 +43,7 @@ func main() {
     http.HandleFunc(DRONE_UPDATE_SWARM_INFO_URL, updateSwarmInfo)
     http.HandleFunc(DRONE_MOVE_TO_POSITION_URL, moveToPosition)
     http.HandleFunc(DRONE_ADD_DRONE_URL, addNewDroneToSwarm)
+    http.HandleFunc(DRONE_KILL_DRONE_URL, deleteDroneFromSwarm)
     http.HandleFunc(DRONE_PAXOS_MESSAGE_URL, handlePaxosMessage)
     http.HandleFunc(DRONE_FORM_POLYGON_URL, droneFormPolygon)
     http.HandleFunc("/proposeNewValue", proposeNewValue)
@@ -134,6 +135,22 @@ func addNewDroneToSwarm(w http.ResponseWriter, r *http.Request) {
             makeGetRequest( "http://" + address + DRONE_ADD_DRONE_URL + "?address=" + swarmDrone.Address, "")
         }
         makeGetRequest( "http://" + address + DRONE_ADD_DRONE_URL + "?address=" + drone.Address, "")
+    }
+}
+
+func deleteDroneFromSwarm(w http.ResponseWriter, r *http.Request) {
+    address := r.URL.Query() .Get("address")
+    log.Println("Received kill drone request at address " + address)
+    killDrone, err := getDroneFromServer(address)
+    if err != nil {
+        log.Println("Error! ", err)
+        return
+    } else {
+        delete(swarm, killDrone.ID)
+        for _, swarmDrone := range swarm {
+            swarmDroneAddress := "http://" + swarmDrone.Address + DRONE_KILL_DRONE_URL + "?address=" + address
+            makeGetRequest(swarmDroneAddress, "")
+        }
     }
 }
 
