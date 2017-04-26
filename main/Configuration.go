@@ -1,16 +1,16 @@
 package main
 
 type Node struct {
-    name    string
-    address string
-    port    string
+	name    string
+	address string
+	port    string
 }
 
-var NodeMap = map[string]Node {
-    "alice": Node{"alice", "localhost", "8081"},
-    "bob": Node{"bob", "localhost", "8082"},
-    "cat": Node{"cat", "localhost", "12358"},
-    "deb": Node{"deb", "localhost", "12359"},
+var NodeMap = map[string]Node{
+	"alice": Node{"alice", "localhost", "8081"},
+	"bob":   Node{"bob", "localhost", "8082"},
+	"cat":   Node{"cat", "localhost", "12358"},
+	"deb":   Node{"deb", "localhost", "12359"},
 }
 
 var ENVIRONMENT_GET_ALL_DRONES_URL = "/getAllDrones"
@@ -27,3 +27,5 @@ var DRONE_HEARTBEAT_URL = "/heartbeat"
 var DRONE_FORM_POLYGON_URL = "/formPolygon"
 
 var DRONE_PAXOS_MESSAGE_URL = "/paxosMessage"
+
+var DRONE_MAEKAWA_MESSAGE_URL = "/maekawaMessage"

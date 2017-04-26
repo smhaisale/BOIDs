@@ -105,3 +105,112 @@ func calculateCoordinates(n int) []Position{
         }
         return posArray
 }
+
+func toString(position Position) string {
+	return "(" + string(position.X) + "," + string(position.Y) + "," + string(position.Z) + ")"
+}
+
+func add(pos1 Position, pos2 Position) Position {
+	return Position{pos1.X + pos2.X, pos1.Y + pos2.Y, pos1.Z + pos2.Z}
+}
+
+func sub(pos1 Position, pos2 Position) Position {
+	return Position{pos1.X - pos2.X, pos1.Y - pos2.Y, pos1.Z - pos2.Z}
+}
+
+func dotMul(pos1 Position, pos2 Position) float64 {
+	return pos1.X * pos2.X + pos1.Y * pos2.Y + pos1.Z * pos2.Z
+}
+
+func scalaMul(x float64, pos Position) Position {
+	return Position{x * pos.X, x * pos.Y, x * pos.Z}
+}
+
+func norm(pos Position) float64{
+	return math.Sqrt(dotMul(pos, pos))
+}
+
+func dist3D_Segment_to_Segment(path1 PathLock, path2 PathLock) float64 {
+	SMALL_NUM := 0.00000001
+	u := sub(path1.To, path1.From)
+	v := sub(path2.To, path2.From)
+	w := sub(path1.From, path2.From)
+	a := dotMul(u, u)
+	b := dotMul(u, v)
+	c := dotMul(v, v)
+	d := dotMul(u, w)
+	e := dotMul(v, w)
+	D := a * c - b * b
+	sc, sN, sD := D, D, D
+	tc, tN, tD := D, D, D
+
+	if D < SMALL_NUM {
+		sN = 0.0
+		sD = 1.0
+		tN = e
+		tD = c
+	} else {
+		sN = b * e - c * d
+		tN = a * e - b * d
+		if sN < 0.0 {
+			sN = 0.0
+			tN = e
+			tD = c
+		} else if sN > sD {
+			sN = sD
+			tN = e + b
+			tD = c
+		}
+	}
+	if tN < 0.0 {
+		tN = 0.0
+		if -d < 0.0 {
+			sN = 0.0
+		} else if -d > a {
+			sN = sD
+		} else {
+			sN = -d
+			sD = a
+		}
+	} else if tN > tD {
+		tN = tD
+		if -d + b < 0.0 {
+			sN = 0
+		} else if -d + b > a {
+			sN = sD
+		} else {
+			sN = -d +  b
+			sD = a
+		}
+	}
+	if math.Abs(sN) < SMALL_NUM {
+		sc = 0.0
+	} else {
+		sc = sN / sD
+	}
+	if math.Abs(tN) < SMALL_NUM {
+		tc = 0.0
+	} else {
+		tc = tN / tD
+	}
+
+	// get the difference of the two closest points
+	dP := sub(add(w, scalaMul(sc, u)), scalaMul(tc, v))
+
+	return norm(dP);   // return the closest distance
+
+}
+
+/*
+
+// finally do the division to get sc and tc
+sc = (abs(sN) < SMALL_NUM ? 0.0 : sN / sD);
+tc = (abs(tN) < SMALL_NUM ? 0.0 : tN / tD);
+
+// get the difference of the two closest points
+Vector   dP = w + (sc * u) - (tc * v);  // =  S1(sc) - S2(tc)
+
+return norm(dP);   // return the closest distance
+}
+*/
+
