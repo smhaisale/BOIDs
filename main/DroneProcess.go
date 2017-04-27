@@ -81,9 +81,15 @@ func moveDrone(newPos Position, t float64) {
         if int(newPos.X) == int(droneObject.Pos.X) && int(newPos.Y) == int(droneObject.Pos.Y) && int(newPos.Z) == int(droneObject.Pos.Z) {
             break
         }
-        droneObject.Pos.X += (newPos.X - oldPos.X) / t
-        droneObject.Pos.Y += (newPos.Y - oldPos.Y) / t
-        droneObject.Pos.Z += (newPos.Z - oldPos.Z) / t
+        if int(newPos.X) != int(droneObject.Pos.X) {
+            droneObject.Pos.X += (newPos.X - oldPos.X) / t
+        }
+        if int(newPos.Y) != int(droneObject.Pos.Y) {
+            droneObject.Pos.Y += (newPos.Y - oldPos.Y) / t
+        }
+        if int(newPos.Z) != int(droneObject.Pos.Z) {
+            droneObject.Pos.Z += (newPos.Z - oldPos.Z) / t
+        }
         time.Sleep(time.Duration(1000000000))
         drone.DroneObject = droneObject
     }
