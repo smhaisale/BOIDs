@@ -21,11 +21,41 @@ var debug = false;
 
 var drone1 = new Drone();
 
-function createSphere(id, size, x, y, z) {
+function getRandomArbitrary(min, max) {
+  return Math.floor(Math.random() * (max - min)) + min;
+}
 
+function createSphere(id, size, newX, newY, newZ) {
+
+    var rValue = getRandomArbitrary(0,255);
+    var gValue = getRandomArbitrary(0,255);
+    var bValue = getRandomArbitrary(0,255);
+
+   var blueLightObj = Phoria.Entity.create({
+      id: id,
+      points: [{x:newX, y:newY, z:newZ}],
+      style: {
+         color: [rValue,gValue,bValue],
+         drawmode: "point",
+         shademode: "plain",
+         linewidth: 10,
+         linescale: 10
+      }
+   });
+   var blueLight = Phoria.PointLight.create({
+      position: {x:newX, y:newY, z:newZ},
+      color: [0,0,0]
+   });
+   blueLightObj.children.push(blueLight);
+
+   return blueLightObj;
+
+/**
     var s = Phoria.Util.generateSphere(size, 24, 48);
 
     var offsetPoints = [];
+
+
 
     for(var pointNumber = 0; pointNumber < s.points.length; pointNumber++) {
         offsetPoints.push({
@@ -45,6 +75,8 @@ function createSphere(id, size, x, y, z) {
             specular: 128
         }
     });
+**/
+
 }
 
 function makeSphereWithValue() {
@@ -73,6 +105,7 @@ function flipDebug() {
     debug = !debug;
     if (debug) {
         for (var id in droneMap) {
+            console.log(droneMap[id]);
             Phoria.Entity.debug(droneMap[id].sphere, {
                 showId: true,
                 showPosition: true
@@ -198,7 +231,7 @@ function updateDronePositions() {
                         var droneAddress = object.Address;
                         drone.address = droneAddress.substring(droneAddress.indexOf(':')+1);
                         var sphere = createSphere(object.ID, drone.size, drone.currentX, drone.currentY, drone.currentZ);
-                        sphereList.push(sphere);
+                        //sphereList.push(sphere);
                         scene.graph.push(sphere);
 
                         drone.sphere = sphere;
@@ -305,7 +338,8 @@ function init()
     });
 **/
     var light = Phoria.DistantLight.create({
-        direction: {x:0, y:-0.5, z:1}
+        color: [0.5,0.5,1.0],
+        direction: {x:0, y:-0.5, z:0}
     });
     scene.graph.push(light);
 

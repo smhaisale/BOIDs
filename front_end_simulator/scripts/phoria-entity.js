@@ -478,7 +478,7 @@ Phoria.CLIP_ARRAY_TYPE = (typeof Uint32Array !== 'undefined') ? Uint32Array : Ar
             var textPos = y;
             if (this.config.showId)
             {
-               ctx.fillText(entity.id ? entity.id : "unknown - set Entity 'id' property", x, textPos);
+               ctx.fillText(entity.id ? "id: " + entity.id : "unknown - set Entity 'id' property", x, textPos);
                textPos += 16;
             }
             if (this.config.showPosition)
