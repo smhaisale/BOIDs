@@ -6,6 +6,8 @@ import (
     "log"
     "encoding/json"
     "bytes"
+    "os"
+    "net"
 )
 
 var client = http.Client{}
@@ -39,7 +41,7 @@ func getRequestBody(msg interface {}, req *http.Request) interface{} {
     if err != nil {
         panic(err)
     }
-    //log.Println(string(body))
+    log.Println(string(body))
     err = json.Unmarshal(body, msg)
     if err != nil {
         log.Printf("error: %v", err)
@@ -85,7 +87,7 @@ func addDroneToServer(droneId string, droneAddress string) error {
 
 // Takes a URL and does a GET request with request body as the provided data. Returns response as a json string.
 func makeGetRequest(url string, data string) (string, error) {
-    // log.Println("Make GET request to " + url + " with data " + data)
+    log.Println("Make GET request to " + url + " with data " + data)
     req, err := http.NewRequest("GET", url, bytes.NewBufferString(data))
     if err != nil {
         return "", err
@@ -112,3 +114,14 @@ func asyncGetRequest(url string, data string) {
     }(url)
 }
 
+// Assumption: there is only one non-loopback IP address
+func getIpAddress() string {
+    host, _ := os.Hostname()
+    addrs, _ := net.LookupIP(host)
+    for _, addr := range addrs {
+        if ipv4 := addr.To4(); ipv4 != nil {
+            return addr.String()
+        }
+    }
+    return ""
+}
