@@ -46,6 +46,7 @@ func main() {
     http.HandleFunc(DRONE_KILL_DRONE_URL, deleteDroneFromSwarm)
     http.HandleFunc(DRONE_PAXOS_MESSAGE_URL, handlePaxosMessage)
     http.HandleFunc(DRONE_FORM_POLYGON_URL, droneFormPolygon)
+    http.HandleFunc(DRONE_FORM_SHAPE_URL, droneFormShape)
     http.HandleFunc("/proposeNewValue", proposeNewValue)
 
     droneObject = DroneObject{Position{x, y, z}, DroneType{"0", "normal", Dimensions{1, 2, 3}, Dimensions{1, 2, 3}, Speed{1, 2, 3}}, Speed{1, 2, 3}}
@@ -170,7 +171,7 @@ func handlePaxosMessage(w http.ResponseWriter, r *http.Request) {
     message := PaxosMessage{}
     getRequestBody(&message, r)
 
-    switch (message.ID) {
+    switch message.ID {
     case 1:
         paxosClient.handlePaxosMessage(message)
     case 2:
@@ -188,6 +189,20 @@ func handlePaxosMessage(w http.ResponseWriter, r *http.Request) {
 func droneFormPolygon(w http.ResponseWriter, r *http.Request) {
     log.Println("Received form polygon request at " + drone.ID)
     index, positions := 0, calculateCoordinates(len(swarm)+1, 2, 10)
+    instruction := MoveInstruction{}
+    instruction.Positions = map[string]Position{}
+    for _, swarmDrone := range swarm {
+        instruction.Positions[swarmDrone.ID] = positions[index]
+        index++
+    }
+    instruction.Positions[drone.ID] = positions[index]
+    message := formPolygonPaxosClient.createPrepareMessage(toJsonString(instruction))
+    formPolygonPaxosClient.sendPaxosMessage(message)
+}
+
+func droneFormShape(w http.ResponseWriter, r *http.Request) {
+    log.Println("Received form polygon request at " + drone.ID)
+    index, positions := 0, calculateCoordinates(len(swarm) + 1)
     instruction := MoveInstruction{}
     instruction.Positions = map[string]Position{}
     for _, swarmDrone := range swarm {
