@@ -124,7 +124,21 @@ func calculateCoordinates(n int, dimension int, radius float64) []Position{
                 posArray[3] = Position {0, 5, -radius}
                 posArray[4] = Position {0, 5 + (radius/math.Sqrt(2)), 0}
                 posArray[5] = Position {0, (-5 - (radius/math.Sqrt(2))), 0}
-            }
+            } else {
+                var angle float64
+                angle = float64 (2) * math.Pi / float64(n)
+                //posArray := make([]Position, n, 2*n)
+                //var posArray [n]Position
+                var x,y,z float64
+                for i := 0; i < n-2; i++ {
+                    x = 0 + radius * math.Sin(float64(i) * angle)
+                    y = 5
+                    z = 0 + radius * math.Cos(float64(i) * angle)
+                    posArray[i] = Position{ x, y, z }
+                }
+                posArray[n-2] = Position {0, 5 + (radius/math.Sqrt(2)), 0}
+                posArray[n-1] = Position {0, (-5 - (radius/math.Sqrt(2))), 0} 
+           }
         }    
         return posArray
 }
