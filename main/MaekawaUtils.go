@@ -30,10 +30,10 @@ var RELEASE = "RELEASE"
 var ACK = "ACK"
 var NACK = "NACK"
 
-var seqNum int = 0
-//var seqNum map[string]int = make(map[string]int)
+var seqNum = map[string]int{REQUEST: 0, RELEASE: 0, ACK: 0, NACK: 0}
 
 
+// not the swarm but all the drones
 func getDrones() []string{
 	keys := reflect.ValueOf(swarm).MapKeys()
 	drones := make([]string, len(keys))
@@ -50,66 +50,37 @@ func formPermGroup() {
 
 func request(path PathLock) {
 	myPathLock = path
-	seqNum += 1
+	seqNum[REQUEST] += 1
 	formPermGroup()
 	for _, otherDroneId := range permissionGroup {
-		/*
-		_, exist := seqNum[otherDroneId]
-		if !exist {
-			seqNum[otherDroneId] = 0
-		}
-		seqNum[otherDroneId] += 1
-		*/
-		log.Println("Request seqNum " + strconv.Itoa(seqNum))
+		log.Println("Request seqNum " + strconv.Itoa(seqNum[REQUEST]))
 		reqMsg := MaekawaMessage{drone.ID, otherDroneId, REQUEST, path}
-		multicastMaekawa(drone.ID, otherDroneId, DRONE_MAEKAWA_MESSAGE_URL, reqMsg, seqNum)
+		multicastMaekawa(drone.ID, otherDroneId, DRONE_MAEKAWA_MESSAGE_URL, reqMsg, seqNum[REQUEST])
 	}
 }
 
 func release() {
-	//todo
 	ackNo = 0
-	seqNum += 1
+	seqNum[RELEASE] += 1
 	for _, otherDroneId := range permissionGroup {
-		/*
-		_, exist := seqNum[otherDroneId]
-		if !exist {
-			seqNum[otherDroneId] = 0
-		}
-		seqNum[otherDroneId] += 1
-		*/
-		log.Println("Release seqNum " + strconv.Itoa(seqNum))
+		log.Println("Release seqNum " + strconv.Itoa(seqNum[RELEASE]))
 		rlsMsg := MaekawaMessage{drone.ID, otherDroneId, RELEASE, myPathLock}
-		multicastMaekawa(drone.ID, otherDroneId, DRONE_MAEKAWA_MESSAGE_URL, rlsMsg, seqNum)
+		multicastMaekawa(drone.ID, otherDroneId, DRONE_MAEKAWA_MESSAGE_URL, rlsMsg, seqNum[RELEASE])
 	}
 }
 
 func ack(dest string) {
-	/*
-	_, exist := seqNum[dest]
-	if !exist {
-		seqNum[dest] = 0
-	}
-	seqNum[dest] += 1
-	*/
-	seqNum += 1
-	log.Println("Ack seqNum " + strconv.Itoa(seqNum))
+	seqNum[ACK] += 1
+	log.Println("Ack seqNum " + strconv.Itoa(seqNum[ACK]))
 	ackMsg := MaekawaMessage{drone.ID, dest, ACK, PathLock{}}
-	multicastMaekawa(drone.ID, dest, DRONE_MAEKAWA_MESSAGE_URL, ackMsg, seqNum)
+	multicastMaekawa(drone.ID, dest, DRONE_MAEKAWA_MESSAGE_URL, ackMsg, seqNum[ACK])
 }
 
 func nack(dest string) {
-	/*
-	_, exist := seqNum[dest]
-	if !exist {
-		seqNum[dest] = 0
-	}
-	seqNum[dest] += 1
-	*/
-	seqNum += 1
-	log.Println("Nack seqNum " + strconv.Itoa(seqNum))
+	seqNum[NACK] += 1
+	log.Println("Nack seqNum " + strconv.Itoa(seqNum[NACK]))
 	nackMsg := MaekawaMessage{drone.ID, dest, NACK, PathLock{}}
-	multicastMaekawa(drone.ID, dest, DRONE_MAEKAWA_MESSAGE_URL, nackMsg, seqNum)
+	multicastMaekawa(drone.ID, dest, DRONE_MAEKAWA_MESSAGE_URL, nackMsg, seqNum[NACK])
 }
 
 func handleRequest(msg MaekawaMessage) {
@@ -122,24 +93,10 @@ func handleRequest(msg MaekawaMessage) {
 			break
 		}
 	}
-	log.Println("---------")
-	log.Println("path request queue: ")
-	for i,_ := range pathRequestQueue {
-		log.Println(i)
-	}
-	log.Println("---------")
-	log.Println("---------")
-	log.Println("curr path lock list: ")
-	for i,_ := range currPathLockList {
-		log.Println(i)
-	}
-	log.Println("---------")
 	if hasIntersect {
-		log.Println("has intersect")
 		pathRequestQueue[source] = path
 		nack(source)
 	} else {
-		log.Println("no intersect")
 		currPathLockList[source] = path
 		ack(source)
 	}
