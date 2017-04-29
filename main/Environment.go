@@ -21,6 +21,7 @@ func main() {
     http.HandleFunc(ENVIRONMENT_ADD_DRONE_URL, addDrone)
     http.HandleFunc(ENVIRONMENT_KILL_DRONE_URL, killDrone)
     http.HandleFunc(ENVIRONMENT_FORM_POLYGON_URL, formPolygon)
+    http.HandleFunc(ENVIRONMENT_FORM_SHAPE_URL, formShape)
     http.HandleFunc(ENVIRONMENT_RANDOM_POSITIONS_URL, randomPositions)
 
     // Start the server on localhost port 8000 and log any errors
@@ -91,7 +92,17 @@ func killDrone(w http.ResponseWriter, r *http.Request) {
 func formPolygon(w http.ResponseWriter, r *http.Request) {
     log.Println("Received form polygon request")
     for _, drone := range droneMap {
-        address := "http://" + drone.Address + ENVIRONMENT_FORM_POLYGON_URL
+        address := "http://" + drone.Address + DRONE_FORM_POLYGON_URL
+        makeGetRequest(address, "")
+        break
+    }
+    w.Header().Set("Access-Control-Allow-Origin", "*")
+}
+
+func formShape(w http.ResponseWriter, r *http.Request) {
+    log.Println("Received form polygon request")
+    for _, drone := range droneMap {
+        address := "http://" + drone.Address + DRONE_FORM_SHAPE_URL
         makeGetRequest(address, "")
         break
     }
