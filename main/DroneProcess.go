@@ -5,8 +5,8 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"time"
 	"strings"
+	"time"
 )
 
 var droneObject DroneObject = DroneObject{}
@@ -18,8 +18,9 @@ var formPolygonPaxosClient = PaxosMessagePasser{}
 
 type MulticastMsgKey struct {
 	OrigSender string
-	SeqNum int
+	SeqNum     int
 }
+
 var haveSeenMap map[MulticastMsgKey]bool = make(map[MulticastMsgKey]bool)
 var haveHandledMap map[MulticastMsgKey]bool = make(map[MulticastMsgKey]bool)
 
@@ -61,7 +62,7 @@ func main() {
 	droneObject = DroneObject{Position{x, y, z}, DroneType{"0", "normal", Dimensions{1, 2, 3}, Dimensions{1, 2, 3}, Speed{1, 2, 3}}, Speed{1, 2, 3}}
 	drone = Drone{droneId, "localhost:" + port, droneObject}
 
-	//swarm[droneId] = drone
+	swarm[droneId] = drone
 
 	// Start the environment server on localhost port 18841 and log any errors
 	log.Println("http server started on :" + port)
@@ -94,32 +95,19 @@ func moveDrone(newPos Position, t float64) {
 		if int(newPos.X) == int(droneObject.Pos.X) && int(newPos.Y) == int(droneObject.Pos.Y) && int(newPos.Z) == int(droneObject.Pos.Z) {
 			break
 		}
-		droneObject.Pos.X += (newPos.X - oldPos.X) / t
-		droneObject.Pos.Y += (newPos.Y - oldPos.Y) / t
-		droneObject.Pos.Z += (newPos.Z - oldPos.Z) / t
+		if int(newPos.X) != int(droneObject.Pos.X) {
+			droneObject.Pos.X += (newPos.X - oldPos.X) / t
+		}
+		if int(newPos.Y) != int(droneObject.Pos.Y) {
+			droneObject.Pos.Y += (newPos.Y - oldPos.Y) / t
+		}
+		if int(newPos.Z) != int(droneObject.Pos.Z) {
+			droneObject.Pos.Z += (newPos.Z - oldPos.Z) / t
+		}
 		time.Sleep(time.Duration(1000000000))
 		drone.DroneObject = droneObject
 	}
 	log.Println("DroneObject in moveDrone", droneObject)
-    log.Println("Moving to ", newPos)
-    oldPos := droneObject.Pos
-    for {
-        if int(newPos.X) == int(droneObject.Pos.X) && int(newPos.Y) == int(droneObject.Pos.Y) && int(newPos.Z) == int(droneObject.Pos.Z) {
-            break
-        }
-        if int(newPos.X) != int(droneObject.Pos.X) {
-            droneObject.Pos.X += (newPos.X - oldPos.X) / t
-        }
-        if int(newPos.Y) != int(droneObject.Pos.Y) {
-            droneObject.Pos.Y += (newPos.Y - oldPos.Y) / t
-        }
-        if int(newPos.Z) != int(droneObject.Pos.Z) {
-            droneObject.Pos.Z += (newPos.Z - oldPos.Z) / t
-        }
-        time.Sleep(time.Duration(1000000000))
-        drone.DroneObject = droneObject
-    }
-    log.Println("DroneObject in moveDrone", droneObject)
 }
 
 func heartbeat(w http.ResponseWriter, r *http.Request) {
@@ -171,19 +159,19 @@ func addNewDroneToSwarm(w http.ResponseWriter, r *http.Request) {
 }
 
 func deleteDroneFromSwarm(w http.ResponseWriter, r *http.Request) {
-    address := r.URL.Query() .Get("address")
-    log.Println("Received kill drone request at address " + address)
-    killDrone, err := getDroneFromServer(address)
-    if err != nil {
-        log.Println("Error! ", err)
-        return
-    } else {
-        delete(swarm, killDrone.ID)
-        for _, swarmDrone := range swarm {
-            swarmDroneAddress := "http://" + swarmDrone.Address + DRONE_KILL_DRONE_URL + "?address=" + address
-            makeGetRequest(swarmDroneAddress, "")
-        }
-    }
+	address := r.URL.Query().Get("address")
+	log.Println("Received kill drone request at address " + address)
+	killDrone, err := getDroneFromServer(address)
+	if err != nil {
+		log.Println("Error! ", err)
+		return
+	} else {
+		delete(swarm, killDrone.ID)
+		for _, swarmDrone := range swarm {
+			swarmDroneAddress := "http://" + swarmDrone.Address + DRONE_KILL_DRONE_URL + "?address=" + address
+			makeGetRequest(swarmDroneAddress, "")
+		}
+	}
 }
 
 func proposeNewValue(w http.ResponseWriter, r *http.Request) {
@@ -233,7 +221,7 @@ func reqTest(w http.ResponseWriter, r *http.Request) {
 
 func handleMaekawaMessage(w http.ResponseWriter, r *http.Request) {
 	origSender := r.URL.Query().Get("origSender")
-	seqNum,_ := strconv.Atoi(r.URL.Query().Get("seqNum"))
+	seqNum, _ := strconv.Atoi(r.URL.Query().Get("seqNum"))
 	msg := MaekawaMessage{}
 	getRequestBody(&msg, r)
 	// log.Println("Original - Received Maekawa Message " + msg.Type + " from " + origSender + " seq " + strconv.Itoa(seqNum))
@@ -242,7 +230,7 @@ func handleMaekawaMessage(w http.ResponseWriter, r *http.Request) {
 		sendMulticast(DRONE_MAEKAWA_MESSAGE_URL, r.URL.Query(), msg)
 	}
 	dest := r.URL.Query().Get("dest")
-	if strings.Compare(drone.ID, dest) == 0 && !haveHandledMap[MulticastMsgKey{origSender, seqNum}]{
+	if strings.Compare(drone.ID, dest) == 0 && !haveHandledMap[MulticastMsgKey{origSender, seqNum}] {
 		haveHandledMap[MulticastMsgKey{origSender, seqNum}] = true
 		log.Println("Received Maekawa Message " + msg.Type + " from " + origSender)
 		switch msg.Type {
