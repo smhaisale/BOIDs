@@ -187,7 +187,7 @@ func handlePaxosMessage(w http.ResponseWriter, r *http.Request) {
 
 func droneFormPolygon(w http.ResponseWriter, r *http.Request) {
     log.Println("Received form polygon request at " + drone.ID)
-    index, positions := 0, calculateCoordinates(len(swarm)+1, 2)
+    index, positions := 0, calculateCoordinates(len(swarm)+1, 2, 10)
     instruction := MoveInstruction{}
     instruction.Positions = map[string]Position{}
     for _, swarmDrone := range swarm {
