@@ -72,7 +72,20 @@ func addDrone(w http.ResponseWriter, r *http.Request) {
 }
 
 func killDrone(w http.ResponseWriter, r *http.Request) {
-
+    address := r.URL.Query().Get("data")
+    log.Println("Received kill drone request at address " + address)
+    killDrone, err := getDroneFromServer(address)
+    if err != nil {
+        log.Println("Error! ", err)
+        return
+    } else {
+        delete(droneMap, killDrone.ID)
+        for _, swarmDrone := range droneMap {
+            killDroneAddress := "http://" + swarmDrone.Address + DRONE_KILL_DRONE_URL + "?address=" + address
+            makeGetRequest(killDroneAddress, "")
+        }
+    }
+    w.Header().Set("Access-Control-Allow-Origin", "*")
 }
 
 func formPolygon(w http.ResponseWriter, r *http.Request) {
@@ -90,8 +103,7 @@ func randomPositions(w http.ResponseWriter, r *http.Request) {
     for _, drone := range droneMap {
         address := "http://" + drone.Address + DRONE_MOVE_TO_POSITION_URL
         x, y, z := getRandomCoordinates()
-        go asyncGetRequest(address + "?X=" + x + "&Y=" + y + "&Z=" + z, "")
-        break
+        asyncGetRequest(address + "?X=" + x + "&Y=" + y + "&Z=" + z, "")
     }
     w.Header().Set("Access-Control-Allow-Origin", "*")
 }

@@ -51,6 +51,7 @@ func main() {
 	http.HandleFunc(DRONE_UPDATE_SWARM_INFO_URL, updateSwarmInfo)
 	http.HandleFunc(DRONE_MOVE_TO_POSITION_URL, moveToPosition)
 	http.HandleFunc(DRONE_ADD_DRONE_URL, addNewDroneToSwarm)
+	http.HandleFunc(DRONE_KILL_DRONE_URL, deleteDroneFromSwarm)
 	http.HandleFunc(DRONE_PAXOS_MESSAGE_URL, handlePaxosMessage)
 	http.HandleFunc(DRONE_FORM_POLYGON_URL, droneFormPolygon)
 	http.HandleFunc("/proposeNewValue", proposeNewValue)
@@ -100,6 +101,25 @@ func moveDrone(newPos Position, t float64) {
 		drone.DroneObject = droneObject
 	}
 	log.Println("DroneObject in moveDrone", droneObject)
+    log.Println("Moving to ", newPos)
+    oldPos := droneObject.Pos
+    for {
+        if int(newPos.X) == int(droneObject.Pos.X) && int(newPos.Y) == int(droneObject.Pos.Y) && int(newPos.Z) == int(droneObject.Pos.Z) {
+            break
+        }
+        if int(newPos.X) != int(droneObject.Pos.X) {
+            droneObject.Pos.X += (newPos.X - oldPos.X) / t
+        }
+        if int(newPos.Y) != int(droneObject.Pos.Y) {
+            droneObject.Pos.Y += (newPos.Y - oldPos.Y) / t
+        }
+        if int(newPos.Z) != int(droneObject.Pos.Z) {
+            droneObject.Pos.Z += (newPos.Z - oldPos.Z) / t
+        }
+        time.Sleep(time.Duration(1000000000))
+        drone.DroneObject = droneObject
+    }
+    log.Println("DroneObject in moveDrone", droneObject)
 }
 
 func heartbeat(w http.ResponseWriter, r *http.Request) {
@@ -150,6 +170,22 @@ func addNewDroneToSwarm(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func deleteDroneFromSwarm(w http.ResponseWriter, r *http.Request) {
+    address := r.URL.Query() .Get("address")
+    log.Println("Received kill drone request at address " + address)
+    killDrone, err := getDroneFromServer(address)
+    if err != nil {
+        log.Println("Error! ", err)
+        return
+    } else {
+        delete(swarm, killDrone.ID)
+        for _, swarmDrone := range swarm {
+            swarmDroneAddress := "http://" + swarmDrone.Address + DRONE_KILL_DRONE_URL + "?address=" + address
+            makeGetRequest(swarmDroneAddress, "")
+        }
+    }
+}
+
 func proposeNewValue(w http.ResponseWriter, r *http.Request) {
 	data := r.URL.Query().Get("data")
 	message := paxosClient.createPrepareMessage(data)
@@ -177,7 +213,7 @@ func handlePaxosMessage(w http.ResponseWriter, r *http.Request) {
 
 func droneFormPolygon(w http.ResponseWriter, r *http.Request) {
 	log.Println("Received form polygon request at " + drone.ID)
-	index, positions := 0, calculateCoordinates(len(swarm)+1)
+	index, positions := 0, calculateCoordinates(len(swarm)+1, 2)
 	instruction := MoveInstruction{}
 	instruction.Positions = map[string]Position{}
 	for _, swarmDrone := range swarm {

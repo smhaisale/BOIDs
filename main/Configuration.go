@@ -20,6 +20,7 @@ var ENVIRONMENT_FORM_POLYGON_URL = "/formPolygon"
 var ENVIRONMENT_RANDOM_POSITIONS_URL = "/randomPositions"
 
 var DRONE_ADD_DRONE_URL = "/addDroneToSwarm"
+var DRONE_KILL_DRONE_URL = "/deleteDroneFromSwarm"
 var DRONE_GET_INFO_URL = "/getDroneInfo"
 var DRONE_UPDATE_SWARM_INFO_URL = "/getSwarmInfo"
 var DRONE_MOVE_TO_POSITION_URL = "/moveToPosition"

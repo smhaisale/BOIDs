@@ -92,18 +92,41 @@ func min(list ...int) int {
 	return min
 }
 
-func calculateCoordinates(n int) []Position{
-        var angle float64
-        angle = float64 (2) * math.Pi / float64(n)
+func calculateCoordinates(n int, dimension int, radius float64) []Position{
         posArray := make([]Position, n, 2*n)
-        //var posArray [n]Position
-        var x,y,z float64
-        for i := 0; i < n; i++ {
-               x = 0 + 10 * math.Sin(float64(i) * angle)
-               y = 5
-               z = 0 + 10 * math.Cos(float64(i) * angle)
-               posArray[i] = Position{ x, y, z }
-        }
+        if dimension == 2 {
+            var angle float64
+            angle = float64 (2) * math.Pi / float64(n)
+            //posArray := make([]Position, n, 2*n)
+            //var posArray [n]Position
+            var x,y,z float64
+            for i := 0; i < n; i++ {
+                x = 0 + radius * math.Sin(float64(i) * angle)
+                y = 5
+                z = 0 + radius * math.Cos(float64(i) * angle)
+                posArray[i] = Position{ x, y, z }
+            }
+        } else {
+            if n == 4 {
+                posArray[0] = Position {0, radius/2, (radius/2)/math.Sqrt(2)}
+                posArray[1] = Position {0, -(radius/2), (radius/2)/math.Sqrt(2)}
+                posArray[2] = Position {radius/2, 0, -(radius/2)/math.Sqrt(2)}
+                posArray[3] = Position {-(radius/2), 0, -(radius/2)/math.Sqrt(2)}
+            } else if n == 5 {
+                posArray[0] = Position {radius, 5, 0}
+                posArray[1] = Position {0, 5, radius}
+                posArray[2] = Position {-(radius), 5, 0}
+                posArray[3] = Position {0, 5 , -(radius)}
+                posArray[4] = Position {0,  5 + (radius/math.Sqrt(2)), 0}
+            } else if n == 6 {
+                posArray[0] = Position {radius, 5, 0}
+                posArray[1] = Position {0, 5, radius}
+                posArray[2] = Position {-radius, 5, 0}
+                posArray[3] = Position {0, 5, -radius}
+                posArray[4] = Position {0, 5 + (radius/math.Sqrt(2)), 0}
+                posArray[5] = Position {0, (-5 - (radius/math.Sqrt(2))), 0}
+            }
+        }    
         return posArray
 }
 
