@@ -111,6 +111,12 @@ func calculateCoordinates(n int, dimension int) []Position{
                 posArray[1] = Position {0, -5, 5/math.Sqrt(2)}
                 posArray[2] = Position {5, 0, -5/math.Sqrt(2)}
                 posArray[3] = Position {-5, 0, -5/math.Sqrt(2)}
+            } else if n == 5 {
+                posArray[0] = Position {10, 5, 0}
+                posArray[1] = Position {0, 5, 10}
+                posArray[2] = Position {-10, 5, 0}
+                posArray[3] = Position {0, 5, -10}
+                posArray[4] = Position {0,  5 + (10/math.Sqrt(2)), 0}
             }
         }    
         return posArray
