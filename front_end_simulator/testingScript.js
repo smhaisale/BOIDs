@@ -90,7 +90,7 @@ function flipDebug() {
 }
 
 function addDroneToEnvironment(address) {
-    var addDroneUrl = 'http://localhost:18842/addDrone?messageType=type&data=localhost:' + address;
+    var addDroneUrl = 'http://localhost:18842/addDrone?messageType=type&data=' + address;
 
     console.log(addDroneUrl);
     $.ajax({
