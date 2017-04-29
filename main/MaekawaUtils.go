@@ -2,7 +2,8 @@ package main
 
 import (
 	"log"
-	"net/http"
+	"fmt"
+	"strconv"
 )
 
 type PathLock struct {
@@ -28,6 +29,8 @@ var RELEASE = "RELEASE"
 var ACK = "ACK"
 var NACK = "NACK"
 
+var seqNum int = 0
+
 // todo
 func formPermGroup() {
 	for k, _ := range swarm {
@@ -37,31 +40,40 @@ func formPermGroup() {
 
 func request(path PathLock) {
 	myPathLock = path
+	//todo
+	formPermGroup()
 	for _, otherDroneId := range permissionGroup {
-		requestUrl := "http://" + swarm[otherDroneId].Address + DRONE_MAEKAWA_MESSAGE_URL
+		seqNum += 1
+		log.Println("Request seqNum " + strconv.Itoa(seqNum))
 		reqMsg := MaekawaMessage{drone.ID, otherDroneId, REQUEST, path}
-		makeGetRequest(requestUrl, toJsonString(reqMsg))
+		multicastMaekawa(drone.ID, otherDroneId, DRONE_MAEKAWA_MESSAGE_URL, reqMsg, seqNum)
 	}
 }
 
 func release() {
+	//todo
+	ackNo = 0
+	formPermGroup()
 	for _, otherDroneId := range permissionGroup {
-		releaseUrl := "http://" + swarm[otherDroneId].Address + DRONE_MAEKAWA_MESSAGE_URL
+		seqNum += 1
+		log.Println("Release seqNum " + strconv.Itoa(seqNum))
 		rlsMsg := MaekawaMessage{drone.ID, otherDroneId, RELEASE, myPathLock}
-		makeGetRequest(releaseUrl, toJsonString(rlsMsg))
+		multicastMaekawa(drone.ID, otherDroneId, DRONE_MAEKAWA_MESSAGE_URL, rlsMsg, seqNum)
 	}
 }
 
 func ack(dest string) {
-	ackUrl := "http://" + swarm[dest].Address + DRONE_MAEKAWA_MESSAGE_URL
+	seqNum += 1
+	log.Println("Ack seqNum " + strconv.Itoa(seqNum))
 	ackMsg := MaekawaMessage{drone.ID, dest, ACK, PathLock{}}
-	makeGetRequest(ackUrl, toJsonString(ackMsg))
+	multicastMaekawa(drone.ID, dest, DRONE_MAEKAWA_MESSAGE_URL, ackMsg, seqNum)
 }
 
 func nack(dest string) {
-	nackUrl := "http://" + swarm[dest].Address + DRONE_MAEKAWA_MESSAGE_URL
+	seqNum += 1
+	log.Println("Nack seqNum " + strconv.Itoa(seqNum))
 	nackMsg := MaekawaMessage{drone.ID, dest, NACK, PathLock{}}
-	makeGetRequest(nackUrl, toJsonString(nackMsg))
+	multicastMaekawa(drone.ID, dest, DRONE_MAEKAWA_MESSAGE_URL, nackMsg, seqNum)
 }
 
 func handleRequest(msg MaekawaMessage) {
@@ -74,16 +86,36 @@ func handleRequest(msg MaekawaMessage) {
 			break
 		}
 	}
+	log.Println("---------")
+	log.Println("path request queue: ")
+	for i,_ := range pathRequestQueue {
+		log.Println(i)
+	}
+	log.Println("---------")
+	log.Println("---------")
+	log.Println("curr path lock list: ")
+	for i,_ := range currPathLockList {
+		log.Println(i)
+	}
+	log.Println("---------")
 	if hasIntersect {
+		log.Println("has intersect")
 		pathRequestQueue[source] = path
 		nack(source)
+	} else {
+		log.Println("no intersect")
+		currPathLockList[source] = path
+		ack(source)
 	}
 }
 
 func handleRelease(msg MaekawaMessage) {
-	ackNo = 0
 	source := msg.Source
-	delete(currPathLockList, source)
+	_, exist := currPathLockList[source]
+	if exist {
+		log.Println("delete currPathlock")
+		delete(currPathLockList, source)
+	}
 	for reqSource, reqPathLock := range pathRequestQueue {
 		hasIntersect := false
 		for _, currPathLock := range currPathLockList {
@@ -93,9 +125,10 @@ func handleRelease(msg MaekawaMessage) {
 			}
 		}
 		if !hasIntersect {
-			ack(source)
 			currPathLockList[reqSource] = reqPathLock
 			delete(pathRequestQueue, reqSource)
+			ack(reqSource)
+			break;
 		}
 	}
 }
@@ -104,6 +137,10 @@ func handleAck(msg MaekawaMessage) {
 	ackNo += 1
 	if ackNo >= len(permissionGroup) {
 		//todo enter cs
+		fmt.Println("Enter CS");
+		var stop string
+		fmt.Scanln(&stop);
+		release();
 	}
 }
 
@@ -114,39 +151,3 @@ func handleNack(msg MaekawaMessage) {
 func isIntersect(path1 PathLock, path2 PathLock) bool {
 	return (dist3D_Segment_to_Segment(path1, path2) < 2)
 }
-
-/*
-func createLockMessage(data string) (message MaekawaMessage) {
-    reset()
-    message.Source = drone.ID
-    message.Data = data
-
-    log.Println("Created prepare message: ", message)
-    return message
-}
-
-func createReleaseMessage(dest string, data string) (message MaekawaMessage) {
-    message.Destination = dest
-    message.Data = data
-
-    log.Println("Created promise message: ", message)
-    return message
-}
-
-func createRejectMessage(data string) (message MaekawaMessage) {
-    message.Source = drone.ID
-    message.Data = data
-
-    log.Println("Created accept message: ", message)
-    return message
-}
-
-func createFailedMessage(message MaekawaMessage) {
-
-}
-
-func handleMaekawaMessage(w http.ResponseWriter, r *http.Request) {
-    message := MaekawaMessage{}
-    getRequestBody(&message, r)
-}
-*/

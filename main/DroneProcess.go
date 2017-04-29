@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"time"
+	"strings"
 )
 
 var droneObject DroneObject = DroneObject{}
@@ -14,6 +15,13 @@ var swarm map[string]Drone = make(map[string]Drone)
 
 var paxosClient = PaxosMessagePasser{}
 var formPolygonPaxosClient = PaxosMessagePasser{}
+
+type MulticastMsgKey struct {
+	OrigSender string
+	SeqNum int
+}
+var haveSeenMap map[MulticastMsgKey]bool = make(map[MulticastMsgKey]bool)
+var haveHandledMap map[MulticastMsgKey]bool = make(map[MulticastMsgKey]bool)
 
 var input_position = map[string]Position{
 	"Drone0": Position{0, 10, 0},
@@ -47,9 +55,13 @@ func main() {
 	http.HandleFunc(DRONE_FORM_POLYGON_URL, droneFormPolygon)
 	http.HandleFunc("/proposeNewValue", proposeNewValue)
 	http.HandleFunc(DRONE_MAEKAWA_MESSAGE_URL, handleMaekawaMessage)
+	http.HandleFunc(ReqTest_URL, reqTest)
 
 	droneObject = DroneObject{Position{x, y, z}, DroneType{"0", "normal", Dimensions{1, 2, 3}, Dimensions{1, 2, 3}, Speed{1, 2, 3}}, Speed{1, 2, 3}}
 	drone = Drone{droneId, "localhost:" + port, droneObject}
+
+	//swarm[droneId] = drone
+
 	// Start the environment server on localhost port 18841 and log any errors
 	log.Println("http server started on :" + port)
 	err := http.ListenAndServe(":"+port, nil)
@@ -177,10 +189,27 @@ func droneFormPolygon(w http.ResponseWriter, r *http.Request) {
 	formPolygonPaxosClient.sendPaxosMessage(message)
 }
 
+func reqTest(w http.ResponseWriter, r *http.Request) {
+	path := PathLock{}
+	getRequestBody(&path, r)
+	request(path)
+}
+
 func handleMaekawaMessage(w http.ResponseWriter, r *http.Request) {
+	origSender := r.URL.Query().Get("origSender")
+	seqNum,_ := strconv.Atoi(r.URL.Query().Get("seqNum"))
 	msg := MaekawaMessage{}
 	getRequestBody(&msg, r)
-	switch msg.Type {
+	// log.Println("Original - Received Maekawa Message " + msg.Type + " from " + origSender + " seq " + strconv.Itoa(seqNum))
+	if !haveSeenMap[MulticastMsgKey{origSender, seqNum}] {
+		haveSeenMap[MulticastMsgKey{origSender, seqNum}] = true
+		sendMulticast(DRONE_MAEKAWA_MESSAGE_URL, r.URL.Query(), msg)
+	}
+	dest := r.URL.Query().Get("dest")
+	if strings.Compare(drone.ID, dest) == 0 && !haveHandledMap[MulticastMsgKey{origSender, seqNum}]{
+		haveHandledMap[MulticastMsgKey{origSender, seqNum}] = true
+		log.Println("Received Maekawa Message " + msg.Type + " from " + origSender)
+		switch msg.Type {
 		case REQUEST:
 			handleRequest(msg)
 		case RELEASE:
@@ -189,5 +218,6 @@ func handleMaekawaMessage(w http.ResponseWriter, r *http.Request) {
 			handleAck(msg)
 		case NACK:
 			handleNack(msg)
+		}
 	}
 }

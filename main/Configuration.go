@@ -29,3 +29,4 @@ var DRONE_FORM_POLYGON_URL = "/formPolygon"
 var DRONE_PAXOS_MESSAGE_URL = "/paxosMessage"
 
 var DRONE_MAEKAWA_MESSAGE_URL = "/maekawaMessage"
+var ReqTest_URL = "/req"

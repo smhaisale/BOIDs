@@ -2,6 +2,7 @@ package main
 
 import (
 	"math"
+	"strconv"
 )
 
 /**
@@ -107,7 +108,7 @@ func calculateCoordinates(n int) []Position{
 }
 
 func toString(position Position) string {
-	return "(" + string(position.X) + "," + string(position.Y) + "," + string(position.Z) + ")"
+	return "(" + strconv.FormatFloat(position.X, 'f', -1, 64) + "," + strconv.FormatFloat(position.Y, 'f', -1, 64) + "," + strconv.FormatFloat(position.Z, 'f', -1, 64) + ")"
 }
 
 func add(pos1 Position, pos2 Position) Position {
@@ -200,17 +201,4 @@ func dist3D_Segment_to_Segment(path1 PathLock, path2 PathLock) float64 {
 	return norm(dP);   // return the closest distance
 
 }
-
-/*
-
-// finally do the division to get sc and tc
-sc = (abs(sN) < SMALL_NUM ? 0.0 : sN / sD);
-tc = (abs(tN) < SMALL_NUM ? 0.0 : tN / tD);
-
-// get the difference of the two closest points
-Vector   dP = w + (sc * u) - (tc * v);  // =  S1(sc) - S2(tc)
-
-return norm(dP);   // return the closest distance
-}
-*/
 
