@@ -18,6 +18,7 @@ var formPolygonPaxosClient = PaxosMessagePasser{}
 
 type MulticastMsgKey struct {
 	OrigSender string
+	Dest string
 	SeqNum     int
 }
 
@@ -222,17 +223,17 @@ func reqTest(w http.ResponseWriter, r *http.Request) {
 func handleMaekawaMessage(w http.ResponseWriter, r *http.Request) {
 	origSender := r.URL.Query().Get("origSender")
 	seqNum, _ := strconv.Atoi(r.URL.Query().Get("seqNum"))
+	dest := r.URL.Query().Get("dest")
 	msg := MaekawaMessage{}
 	getRequestBody(&msg, r)
 	// log.Println("Original - Received Maekawa Message " + msg.Type + " from " + origSender + " seq " + strconv.Itoa(seqNum))
-	if !haveSeenMap[MulticastMsgKey{origSender, seqNum}] {
-		haveSeenMap[MulticastMsgKey{origSender, seqNum}] = true
+	if !haveSeenMap[MulticastMsgKey{origSender, dest,seqNum}] {
+		haveSeenMap[MulticastMsgKey{origSender, dest,seqNum}] = true
 		sendMulticast(DRONE_MAEKAWA_MESSAGE_URL, r.URL.Query(), msg)
 	}
-	dest := r.URL.Query().Get("dest")
-	if strings.Compare(drone.ID, dest) == 0 && !haveHandledMap[MulticastMsgKey{origSender, seqNum}] {
-		haveHandledMap[MulticastMsgKey{origSender, seqNum}] = true
-		log.Println("Received Maekawa Message " + msg.Type + " from " + origSender)
+	if strings.Compare(drone.ID, dest) == 0 && !haveHandledMap[MulticastMsgKey{origSender, dest,seqNum}] {
+		haveHandledMap[MulticastMsgKey{origSender, dest,seqNum}] = true
+		log.Println("Received Maekawa Message " + msg.Type + " from " + origSender + " with seq " + strconv.Itoa(seqNum))
 		switch msg.Type {
 		case REQUEST:
 			handleRequest(msg)

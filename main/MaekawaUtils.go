@@ -4,6 +4,7 @@ import (
 	"log"
 	"fmt"
 	"strconv"
+	"reflect"
 )
 
 type PathLock struct {
@@ -30,20 +31,35 @@ var ACK = "ACK"
 var NACK = "NACK"
 
 var seqNum int = 0
+//var seqNum map[string]int = make(map[string]int)
+
+
+func getDrones() []string{
+	keys := reflect.ValueOf(swarm).MapKeys()
+	drones := make([]string, len(keys))
+	for i := 0; i < len(keys); i++ {
+		drones[i] = keys[i].String()
+	}
+	return drones
+}
 
 // todo
 func formPermGroup() {
-	for k, _ := range swarm {
-		permissionGroup = append(permissionGroup, k)
-	}
+	permissionGroup = getDrones()
 }
 
 func request(path PathLock) {
 	myPathLock = path
-	//todo
+	seqNum += 1
 	formPermGroup()
 	for _, otherDroneId := range permissionGroup {
-		seqNum += 1
+		/*
+		_, exist := seqNum[otherDroneId]
+		if !exist {
+			seqNum[otherDroneId] = 0
+		}
+		seqNum[otherDroneId] += 1
+		*/
 		log.Println("Request seqNum " + strconv.Itoa(seqNum))
 		reqMsg := MaekawaMessage{drone.ID, otherDroneId, REQUEST, path}
 		multicastMaekawa(drone.ID, otherDroneId, DRONE_MAEKAWA_MESSAGE_URL, reqMsg, seqNum)
@@ -53,9 +69,15 @@ func request(path PathLock) {
 func release() {
 	//todo
 	ackNo = 0
-	formPermGroup()
+	seqNum += 1
 	for _, otherDroneId := range permissionGroup {
-		seqNum += 1
+		/*
+		_, exist := seqNum[otherDroneId]
+		if !exist {
+			seqNum[otherDroneId] = 0
+		}
+		seqNum[otherDroneId] += 1
+		*/
 		log.Println("Release seqNum " + strconv.Itoa(seqNum))
 		rlsMsg := MaekawaMessage{drone.ID, otherDroneId, RELEASE, myPathLock}
 		multicastMaekawa(drone.ID, otherDroneId, DRONE_MAEKAWA_MESSAGE_URL, rlsMsg, seqNum)
@@ -63,6 +85,13 @@ func release() {
 }
 
 func ack(dest string) {
+	/*
+	_, exist := seqNum[dest]
+	if !exist {
+		seqNum[dest] = 0
+	}
+	seqNum[dest] += 1
+	*/
 	seqNum += 1
 	log.Println("Ack seqNum " + strconv.Itoa(seqNum))
 	ackMsg := MaekawaMessage{drone.ID, dest, ACK, PathLock{}}
@@ -70,6 +99,13 @@ func ack(dest string) {
 }
 
 func nack(dest string) {
+	/*
+	_, exist := seqNum[dest]
+	if !exist {
+		seqNum[dest] = 0
+	}
+	seqNum[dest] += 1
+	*/
 	seqNum += 1
 	log.Println("Nack seqNum " + strconv.Itoa(seqNum))
 	nackMsg := MaekawaMessage{drone.ID, dest, NACK, PathLock{}}
@@ -113,7 +149,6 @@ func handleRelease(msg MaekawaMessage) {
 	source := msg.Source
 	_, exist := currPathLockList[source]
 	if exist {
-		log.Println("delete currPathlock")
 		delete(currPathLockList, source)
 	}
 	for reqSource, reqPathLock := range pathRequestQueue {
