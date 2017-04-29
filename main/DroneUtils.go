@@ -91,17 +91,27 @@ func min(list ...int) int {
 	return min
 }
 
-func calculateCoordinates(n int) []Position{
-        var angle float64
-        angle = float64 (2) * math.Pi / float64(n)
+func calculateCoordinates(n int, dimension int) []Position{
         posArray := make([]Position, n, 2*n)
-        //var posArray [n]Position
-        var x,y,z float64
-        for i := 0; i < n; i++ {
-               x = 0 + 10 * math.Sin(float64(i) * angle)
-               y = 5
-               z = 0 + 10 * math.Cos(float64(i) * angle)
-               posArray[i] = Position{ x, y, z }
-        }
+        if dimension == 2 {
+            var angle float64
+            angle = float64 (2) * math.Pi / float64(n)
+            //posArray := make([]Position, n, 2*n)
+            //var posArray [n]Position
+            var x,y,z float64
+            for i := 0; i < n; i++ {
+                x = 0 + 10 * math.Sin(float64(i) * angle)
+                y = 5
+                z = 0 + 10 * math.Cos(float64(i) * angle)
+                posArray[i] = Position{ x, y, z }
+            }
+        } else {
+            if n == 4 {
+                posArray[0] = Position {0, 5, 5/math.Sqrt(2)}
+                posArray[1] = Position {0, -5, 5/math.Sqrt(2)}
+                posArray[2] = Position {5, 0, -5/math.Sqrt(2)}
+                posArray[3] = Position {-5, 0, -5/math.Sqrt(2)}
+            }
+        }    
         return posArray
 }
