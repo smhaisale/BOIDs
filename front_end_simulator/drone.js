@@ -1,7 +1,7 @@
 function Drone(id, x, y, z) {
    this.ID;
    this.address;
-   this.size = 0.5;
+   this.size = 0.5 + 0.5 * Math.random();
    this.currentX = x;
    this.currentY = y;
    this.currentZ = z;

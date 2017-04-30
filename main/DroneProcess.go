@@ -6,6 +6,8 @@ import (
     "time"
     "log"
     "fmt"
+    "math/rand"
+    "math"
 )
 
 var droneObject DroneObject = DroneObject{}
@@ -49,7 +51,10 @@ func main() {
     http.HandleFunc(DRONE_FORM_SHAPE_URL, droneFormShape)
     http.HandleFunc("/proposeNewValue", proposeNewValue)
 
-    droneObject = DroneObject{Position{x, y, z}, DroneType{"0", "normal", Dimensions{1, 2, 3}, Dimensions{1, 2, 3}, Speed{1, 2, 3}}, Speed{1, 2, 3}}
+    randomPosition := Position{rand.Float64() * 20 - 10, rand.Float64() * 10, rand.Float64() * 20 - 10}
+    randomSpeed := Speed{rand.Float64() * 5, rand.Float64() * 5, rand.Float64() * 5}
+
+    droneObject = DroneObject{randomPosition, DroneType{"0", "normal", Dimensions{1, 2, 3}, Dimensions{1, 2, 3}, Speed{1, 2, 3}}, randomSpeed}
     drone = Drone{droneId, "localhost:" + port, droneObject}
     // Start the environment server and log any errors
     log.Println("http server started on " + drone.Address)
@@ -82,24 +87,28 @@ func moveDrone(newPos Position, t float64) {
         deltaX = newPos.X - oldPos.X
         deltaY = newPos.Y - oldPos.Y
         deltaZ = newPos.Z - oldPos.Z
-        for i := 0; i < 10; i++ {
-                droneObject.Pos.X += (deltaX) / 10
-                droneObject.Pos.Y += (deltaY) / 10
-                droneObject.Pos.Z += (deltaZ) / 10
 
-                time.Sleep(time.Duration(1000000000))
+        iterations := (math.Abs(deltaX) + math.Abs(deltaY) + math.Abs(deltaZ)) * 1.0
+
+        for i := 0; i < int(iterations); i++ {
+                droneObject.Pos.X += (deltaX) / iterations
+                droneObject.Pos.Y += (deltaY) / iterations
+                droneObject.Pos.Z += (deltaZ) / iterations
+
+                time.Sleep(time.Duration(100000000))
                 drone.DroneObject = droneObject
         }
+
         oldPosAfter := droneObject.Pos
         deltaX = newPos.X - oldPosAfter.X
         deltaY = newPos.Y - oldPosAfter.Y
         deltaZ = newPos.Z - oldPosAfter.Z
-        
-        droneObject.Pos.X += (deltaX) 
-        droneObject.Pos.Y += (deltaY)
-        droneObject.Pos.Z += (deltaZ) 
 
-        time.Sleep(time.Duration(1000000000))
+        droneObject.Pos.X += (deltaX)
+        droneObject.Pos.Y += (deltaY)
+        droneObject.Pos.Z += (deltaZ)
+
+        time.Sleep(time.Duration(100000000))
         drone.DroneObject = droneObject
 
         log.Println("DroneObject in moveDrone", droneObject)

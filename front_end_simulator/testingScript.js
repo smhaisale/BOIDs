@@ -17,6 +17,7 @@ var droneList = [];
 var droneMap = {};
 
 var pause = true;
+var animate = false;
 var debug = false;
 
 var drone1 = new Drone();
@@ -91,6 +92,22 @@ function makeSphereWithValue() {
         droneList[i].dZ = (droneList[i].newZ - droneList[i].currentZ) * droneList[i].speed;
         pause = false;
     }
+}
+
+//Used in frontend to refresh drone positions
+function flipAnimate() {
+    animate = !animate;
+    if (animate) {
+        // rotate the camera around the scene
+        scene.onCamera(function(position, lookAt, up) {
+            var rotMatrix = mat4.create();
+            mat4.rotateY(rotMatrix, rotMatrix, Math.sin(Date.now()/10000)*Phoria.RADIANS*360);
+            vec4.transformMat4(position, position, rotMatrix);
+        });
+    } else {
+        scene.onCameraHandlers = null;
+    }
+    console.log("Paused: " + pause);
 }
 
 //Used in frontend to refresh drone positions
@@ -241,11 +258,11 @@ function updateDronePositions() {
                         }
                     }
                 }
-                setTimeout(updateDronePositions, 1000);
+                setTimeout(updateDronePositions, 16);
             }
         });
     } else {
-        setTimeout(updateDronePositions, 1000);
+        setTimeout(updateDronePositions, 16);
     }
 
 }
@@ -327,14 +344,6 @@ function init()
     };
     scene.graph.push(fnGenerateStarfield(500,2000));
 
-    // rotate the camera around the scene
-
-    scene.onCamera(function(position, lookAt, up) {
-        var rotMatrix = mat4.create();
-        mat4.rotateY(rotMatrix, rotMatrix, Math.sin(Date.now()/10000)*Phoria.RADIANS*360);
-        vec4.transformMat4(position, position, rotMatrix);
-    });
-
     var light = Phoria.DistantLight.create({
         color: [1.0,1.0,1.0],
         direction: {x:1, y:-1, z:0}
@@ -395,6 +404,7 @@ function init()
     var drone = {
         start : false,
         debug : false,
+        animate : false,
         address : '',
         id : '',
         position : '',
@@ -436,6 +446,7 @@ function init()
     f.add(light, "intensity").min(0).max(1).step(0.1);
 
     f = gui.addFolder('Drone Controls')
+    f.add(drone, 'animate').name('Animate').onFinishChange(function(){flipAnimate()});
     f.add(drone, 'start').name('Running').onFinishChange(function(){flipPause()});
     f.add(drone, 'debug').name('Show Debug Info').onFinishChange(function(){flipDebug()});
     f.add(drone, 'address').name('Add Drone').onFinishChange(function(){addDroneToEnvironment(drone.address)});
