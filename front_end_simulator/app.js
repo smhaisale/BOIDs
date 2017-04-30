@@ -31,7 +31,7 @@ app.use(function (req, res, next) {
 
 
 app.get('/',function(req,res){
-res.sendFile(path.join(__dirname+'/keyboardInputExample.html'));
+res.sendfile(path.join(__dirname+'/keyboardInputExample.html'));
   //It will find and locate index.html from View or Scripts
 });
 
