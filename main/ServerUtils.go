@@ -118,9 +118,14 @@ func asyncGetRequest(url string, data string) {
 func getIpAddress() string {
     host, _ := os.Hostname()
     addrs, _ := net.LookupIP(host)
+    flag := 0
     for _, addr := range addrs {
         if ipv4 := addr.To4(); ipv4 != nil {
-            return addr.String()
+            if flag == 0 {
+                flag++
+            } else {
+                return addr.String()
+            }
         }
     }
     return ""

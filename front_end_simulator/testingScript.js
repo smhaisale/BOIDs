@@ -17,11 +17,41 @@ var droneList = [];
 var droneMap = {};
 
 var pause = true;
+var animate = false;
 var debug = false;
 
 var drone1 = new Drone();
 
-function createSphere(id, size, x, y, z) {
+function getRandomArbitrary(min, max) {
+  return Math.floor(Math.random() * (max - min)) + min;
+}
+
+function createSphere(id, size, newX, newY, newZ) {
+
+    var rValue = getRandomArbitrary(0,255);
+    var gValue = getRandomArbitrary(0,255);
+    var bValue = getRandomArbitrary(0,255);
+
+    /**
+   var blueLightObj = Phoria.Entity.create({
+      id: id,
+      points: [{x:newX, y:newY, z:newZ}],
+      style: {
+         color: [rValue,gValue,bValue],
+         drawmode: "point",
+         shademode: "plain",
+         linewidth: 10,
+         linescale: 10
+      }
+   });
+   var blueLight = Phoria.PointLight.create({
+      position: {x:newX, y:newY, z:newZ},
+      color: [0,0,0]
+   });
+   blueLightObj.children.push(blueLight);
+
+   return blueLightObj;
+     **/
 
     var s = Phoria.Util.generateSphere(size, 24, 48);
 
@@ -29,9 +59,9 @@ function createSphere(id, size, x, y, z) {
 
     for(var pointNumber = 0; pointNumber < s.points.length; pointNumber++) {
         offsetPoints.push({
-            x: s.points[pointNumber].x + x,
-            y: s.points[pointNumber].y + y,
-            z: s.points[pointNumber].z + z
+            x: s.points[pointNumber].x + newX,
+            y: s.points[pointNumber].y + newY,
+            z: s.points[pointNumber].z + newZ
         });
     }
 
@@ -41,10 +71,12 @@ function createSphere(id, size, x, y, z) {
         edges: s.edges,
         polygons: s.polygons,
         style: {
+            color: [rValue,gValue,bValue],
             diffuse: 1,
             specular: 128
         }
     });
+
 }
 
 function makeSphereWithValue() {
@@ -63,6 +95,22 @@ function makeSphereWithValue() {
 }
 
 //Used in frontend to refresh drone positions
+function flipAnimate() {
+    animate = !animate;
+    if (animate) {
+        // rotate the camera around the scene
+        scene.onCamera(function(position, lookAt, up) {
+            var rotMatrix = mat4.create();
+            mat4.rotateY(rotMatrix, rotMatrix, Math.sin(Date.now()/10000)*Phoria.RADIANS*360);
+            vec4.transformMat4(position, position, rotMatrix);
+        });
+    } else {
+        scene.onCameraHandlers = null;
+    }
+    console.log("Paused: " + pause);
+}
+
+//Used in frontend to refresh drone positions
 function flipPause() {
     pause = !pause;
     console.log("Paused: " + pause);
@@ -73,6 +121,7 @@ function flipDebug() {
     debug = !debug;
     if (debug) {
         for (var id in droneMap) {
+            console.log(droneMap[id]);
             Phoria.Entity.debug(droneMap[id].sphere, {
                 showId: true,
                 showPosition: true
@@ -197,7 +246,7 @@ function updateDronePositions() {
                         drone.address = droneAddress.substring(droneAddress.indexOf(':')+1);
                         console.log(drone.address);
                         var sphere = createSphere(object.ID, drone.size, drone.currentX, drone.currentY, drone.currentZ);
-                        sphereList.push(sphere);
+                        //sphereList.push(sphere);
                         scene.graph.push(sphere);
 
                         drone.sphere = sphere;
@@ -209,11 +258,11 @@ function updateDronePositions() {
                         }
                     }
                 }
-                setTimeout(updateDronePositions, 1000);
+                setTimeout(updateDronePositions, 16);
             }
         });
     } else {
-        setTimeout(updateDronePositions, 1000);
+        setTimeout(updateDronePositions, 16);
     }
 
 }
@@ -295,18 +344,16 @@ function init()
     };
     scene.graph.push(fnGenerateStarfield(500,2000));
 
-    // rotate the camera around the scene
-    /**
-    scene.onCamera(function(position, lookAt, up) {
-        var rotMatrix = mat4.create();
-        mat4.rotateY(rotMatrix, rotMatrix, Math.sin(Date.now()/10000)*Phoria.RADIANS*360);
-        vec4.transformMat4(position, position, rotMatrix);
-    });
-**/
     var light = Phoria.DistantLight.create({
-        direction: {x:0, y:-0.5, z:1}
+        color: [1.0,1.0,1.0],
+        direction: {x:1, y:-1, z:0}
+    });
+    var light2 = Phoria.DistantLight.create({
+        color: [1.0,1.0,1.0],
+        direction: {x:-1, y:-1, z:0}
     });
     scene.graph.push(light);
+    scene.graph.push(light2);
 
     var fnAnimate = function() {
         if (!pause)
@@ -357,6 +404,7 @@ function init()
     var drone = {
         start : false,
         debug : false,
+        animate : false,
         address : '',
         id : '',
         position : '',
@@ -398,6 +446,7 @@ function init()
     f.add(light, "intensity").min(0).max(1).step(0.1);
 
     f = gui.addFolder('Drone Controls')
+    f.add(drone, 'animate').name('Animate').onFinishChange(function(){flipAnimate()});
     f.add(drone, 'start').name('Running').onFinishChange(function(){flipPause()});
     f.add(drone, 'debug').name('Show Debug Info').onFinishChange(function(){flipDebug()});
     f.add(drone, 'address').name('Add Drone').onFinishChange(function(){addDroneToEnvironment(drone.address)});
