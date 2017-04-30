@@ -50,7 +50,7 @@ func main() {
     http.HandleFunc("/proposeNewValue", proposeNewValue)
 
     droneObject = DroneObject{Position{x, y, z}, DroneType{"0", "normal", Dimensions{1, 2, 3}, Dimensions{1, 2, 3}, Speed{1, 2, 3}}, Speed{1, 2, 3}}
-    drone = Drone{droneId, getIpAddress() + ":" + port, droneObject}
+    drone = Drone{droneId, "localhost:" + port, droneObject}
     // Start the environment server and log any errors
     log.Println("http server started on " + drone.Address)
     err := http.ListenAndServe(":" + port, nil)
@@ -76,33 +76,25 @@ func main() {
 //}
 
 func moveDrone(newPos Position, t float64) {
-        log.Println("Moving to ", newPos)
-        oldPos := droneObject.Pos
-        var deltaX, deltaY, deltaZ float64
-        deltaX = newPos.X - oldPos.X
-        deltaY = newPos.Y - oldPos.Y
-        deltaZ = newPos.Z - oldPos.Z
-        for i := 0; i < 10; i++ {
-                droneObject.Pos.X += (deltaX) / 10
-                droneObject.Pos.Y += (deltaY) / 10
-                droneObject.Pos.Z += (deltaZ) / 10
-
-                time.Sleep(time.Duration(1000000000))
-                drone.DroneObject = droneObject
+    log.Println("Moving to ", newPos)
+    oldPos := droneObject.Pos
+    for {
+        if int(newPos.X) == int(droneObject.Pos.X) && int(newPos.Y) == int(droneObject.Pos.Y) && int(newPos.Z) == int(droneObject.Pos.Z) {
+            break
         }
-        oldPosAfter := droneObject.Pos
-        deltaX = newPos.X - oldPosAfter.X
-        deltaY = newPos.Y - oldPosAfter.Y
-        deltaZ = newPos.Z - oldPosAfter.Z
-        
-        droneObject.Pos.X += (deltaX) 
-        droneObject.Pos.Y += (deltaY)
-        droneObject.Pos.Z += (deltaZ) 
-
+        if int(newPos.X) != int(droneObject.Pos.X) {
+            droneObject.Pos.X += (newPos.X - oldPos.X) / t
+        }
+        if int(newPos.Y) != int(droneObject.Pos.Y) {
+            droneObject.Pos.Y += (newPos.Y - oldPos.Y) / t
+        }
+        if int(newPos.Z) != int(droneObject.Pos.Z) {
+            droneObject.Pos.Z += (newPos.Z - oldPos.Z) / t
+        }
         time.Sleep(time.Duration(1000000000))
         drone.DroneObject = droneObject
-
-        log.Println("DroneObject in moveDrone", droneObject)
+    }
+    log.Println("DroneObject in moveDrone", droneObject)
 }
 
 func heartbeat(w http.ResponseWriter, r *http.Request) {
@@ -111,6 +103,7 @@ func heartbeat(w http.ResponseWriter, r *http.Request) {
 }
 
 func getDroneInfo(w http.ResponseWriter, r *http.Request) {
+    drone.Address = r.Host
     // log.Println("Drone.droneObject in getDroneInfo ", drone.droneObject)
     // log.Println("DroneObject in moveDrone ", droneObject)
     w.Header().Set("Access-Control-Allow-Origin", "*")
