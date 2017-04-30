@@ -107,7 +107,19 @@ func getPolygonCoordinates(size int, total int) []Position {
 
 func calculateCoordinatesForPrism(n int, usedDrones int, radius float64) []Position{
 	posArray := make([]Position, n, 2*n)
-
+        var angle float64
+        angle = float64 (2) * math.Pi / float64(n)
+        var x,y,z float64
+        for i := 0; i < n/2; i++ {
+            x = 0 + radius * math.Sin(float64(i) * angle)
+            y = 5                 
+            z = 0 + radius * math.Cos(float64(i) * angle)
+            posArray[i] = Position{ x, y, z } 
+            posArray[2*i] = Position{ x, y + radius, z }   
+        }         
+        if (n%2 != 0) {
+            posArray[n-1] = Position {0, 5 + (radius/math.Sqrt(2)), 0}
+        }
         return posArray 
 }
 
