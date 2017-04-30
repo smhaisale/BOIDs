@@ -33,9 +33,9 @@ func main() {
 }
 
 func getRandomCoordinates () (x, y, z string) {
-    x2 := rand.Float64() * 10.0 - 20.0
+    x2 := rand.Float64() * 20.0 - 10.0
     y2 := rand.Float64() * 10.0
-    z2 := rand.Float64() * 10.0 - 20.0
+    z2 := rand.Float64() * 20.0 - 10.0
     log.Println("Random coordinates: ", x, y, z)
     x = strconv.FormatFloat(x2, 'f', 6, 64)
     y = strconv.FormatFloat(y2, 'f', 6, 64)

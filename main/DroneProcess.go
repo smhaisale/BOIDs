@@ -103,7 +103,7 @@ func heartbeat(w http.ResponseWriter, r *http.Request) {
 }
 
 func getDroneInfo(w http.ResponseWriter, r *http.Request) {
-    drone.Address = r.URL.Host
+    drone.Address = r.Host
     // log.Println("Drone.droneObject in getDroneInfo ", drone.droneObject)
     // log.Println("DroneObject in moveDrone ", droneObject)
     w.Header().Set("Access-Control-Allow-Origin", "*")
