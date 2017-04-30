@@ -1,11 +1,11 @@
 package main
 
 import (
-    "fmt"
     "net/http"
     "strconv"
     "time"
     "log"
+    "fmt"
 )
 
 var droneObject DroneObject = DroneObject{}
@@ -51,8 +51,8 @@ func main() {
 
     droneObject = DroneObject{Position{x, y, z}, DroneType{"0", "normal", Dimensions{1, 2, 3}, Dimensions{1, 2, 3}, Speed{1, 2, 3}}, Speed{1, 2, 3}}
     drone = Drone{droneId, "localhost:" + port, droneObject}
-    // Start the environment server on localhost port 18841 and log any errors
-    log.Println("http server started on :" + port)
+    // Start the environment server and log any errors
+    log.Println("http server started on " + drone.Address)
     err := http.ListenAndServe(":" + port, nil)
     if err != nil {
         log.Fatal("ListenAndServe: ", err)
@@ -103,6 +103,7 @@ func heartbeat(w http.ResponseWriter, r *http.Request) {
 }
 
 func getDroneInfo(w http.ResponseWriter, r *http.Request) {
+    drone.Address = r.Host
     // log.Println("Drone.droneObject in getDroneInfo ", drone.droneObject)
     // log.Println("DroneObject in moveDrone ", droneObject)
     w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -202,7 +203,7 @@ func droneFormPolygon(w http.ResponseWriter, r *http.Request) {
 
 func droneFormShape(w http.ResponseWriter, r *http.Request) {
     log.Println("Received form polygon request at " + drone.ID)
-    index, positions := 0, calculateCoordinates(len(swarm) + 1)
+    index, positions := 0, calculateCoordinates(len(swarm) + 1, 2 ,10)
     instruction := MoveInstruction{}
     instruction.Positions = map[string]Position{}
     for _, swarmDrone := range swarm {

@@ -123,7 +123,7 @@ function flipDebug() {
 }
 
 function addDroneToEnvironment(address) {
-    var addDroneUrl = 'http://localhost:18842/addDrone?messageType=type&data=localhost:' + address;
+    var addDroneUrl = 'http://' + document.location.hostname + ':18842/addDrone?messageType=type&data=' + address;
 
     console.log(addDroneUrl);
     $.ajax({
@@ -138,7 +138,7 @@ function addDroneToEnvironment(address) {
 }
 
 function formPolygon() {
-    var formPolygonUrl = 'http://localhost:18842/formPolygon';
+    var formPolygonUrl = 'http://' + document.location.hostname + ':18842/formPolygon';
     $.ajax({
         type: 'GET',
         dataType: 'json',
@@ -150,7 +150,7 @@ function formPolygon() {
 }
 
 function randomPositions() {
-    var randomPositionsUrl = 'http://localhost:18842/randomPositions';
+    var randomPositionsUrl = 'http://' + document.location.hostname + ':18842/randomPositions';
     $.ajax({
         type: 'GET',
         dataType: 'json',
@@ -181,7 +181,7 @@ function setDronePosition(idPosition) {
     droneToChange.dZ = (droneToChange.newZ - droneToChange.currentZ) * droneToChange.speed;
     **/
     var droneAddress = droneToChange.address;
-    var formPolygonUrl = 'http://localhost:' + droneAddress + '/moveToPosition?X=' + positionData[0] + '&Y=' + positionData[1] + '&Z=' + positionData[2];
+    var formPolygonUrl = droneAddress + '/moveToPosition?X=' + positionData[0] + '&Y=' + positionData[1] + '&Z=' + positionData[2];
     $.ajax({
         type: 'GET',
         dataType: 'json',
@@ -193,17 +193,15 @@ function setDronePosition(idPosition) {
 }
 
 function removeDroneFromEnvironment(address) {
-    // kill drone not implemented yet, call the function here when it's done
-    //var addDroneUrl = 'http://localhost:18842/addDrone?messageType=type&data=' + address;
-    /**
+    var killDroneUrl = 'http://' + document.location.hostname + ':18842/killDrone?messageType=type&data=' + address;
     $.ajax({
-    type: 'GET',
-    dataType: 'json',
-    url: addDroneUrl ,
-    success: function (data) {
-        console.log("added drone to the list");
-    }
-    **/
+        type: 'GET',
+        dataType: 'json',
+        url: killDroneUrl,
+        success: function (data) {
+            console.log("added drone to the list");
+        }
+    })
 }
 
 function loadDroneData() {
@@ -216,7 +214,7 @@ function updateDronePositions() {
         $.ajax({
             type: 'GET',
             dataType: 'json',
-            url: 'http://localhost:18842/getAllDrones',
+            url: 'http://' + document.location.hostname + ':18842/getAllDrones',
             success: function (data) {
                 console.log(data);
                 var mapSize = 0, key;
@@ -230,6 +228,7 @@ function updateDronePositions() {
                         var drone = new Drone(object.ID, object.DroneObject.pos.X, object.DroneObject.pos.Y, object.DroneObject.pos.Z);
                         var droneAddress = object.Address;
                         drone.address = droneAddress.substring(droneAddress.indexOf(':')+1);
+                        console.log(drone.address);
                         var sphere = createSphere(object.ID, drone.size, drone.currentX, drone.currentY, drone.currentZ);
                         //sphereList.push(sphere);
                         scene.graph.push(sphere);

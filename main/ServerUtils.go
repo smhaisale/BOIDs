@@ -6,6 +6,8 @@ import (
     "log"
     "encoding/json"
     "bytes"
+    "os"
+    "net"
 )
 
 var client = http.Client{}
@@ -110,4 +112,21 @@ func asyncGetRequest(url string, data string) {
         }
         resp.Body.Close()
     }(url)
+}
+
+// Assumption: there is only one non-loopback IP address
+func getIpAddress() string {
+    host, _ := os.Hostname()
+    addrs, _ := net.LookupIP(host)
+    flag := 0
+    for _, addr := range addrs {
+        if ipv4 := addr.To4(); ipv4 != nil {
+            if flag == 0 {
+                flag++
+            } else {
+                return addr.String()
+            }
+        }
+    }
+    return ""
 }
