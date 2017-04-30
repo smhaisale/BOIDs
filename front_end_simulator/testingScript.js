@@ -31,6 +31,7 @@ function createSphere(id, size, newX, newY, newZ) {
     var gValue = getRandomArbitrary(0,255);
     var bValue = getRandomArbitrary(0,255);
 
+    /**
    var blueLightObj = Phoria.Entity.create({
       id: id,
       points: [{x:newX, y:newY, z:newZ}],
@@ -49,19 +50,17 @@ function createSphere(id, size, newX, newY, newZ) {
    blueLightObj.children.push(blueLight);
 
    return blueLightObj;
+     **/
 
-/**
     var s = Phoria.Util.generateSphere(size, 24, 48);
 
     var offsetPoints = [];
 
-
-
     for(var pointNumber = 0; pointNumber < s.points.length; pointNumber++) {
         offsetPoints.push({
-            x: s.points[pointNumber].x + x,
-            y: s.points[pointNumber].y + y,
-            z: s.points[pointNumber].z + z
+            x: s.points[pointNumber].x + newX,
+            y: s.points[pointNumber].y + newY,
+            z: s.points[pointNumber].z + newZ
         });
     }
 
@@ -71,11 +70,11 @@ function createSphere(id, size, newX, newY, newZ) {
         edges: s.edges,
         polygons: s.polygons,
         style: {
+            color: [rValue,gValue,bValue],
             diffuse: 1,
             specular: 128
         }
     });
-**/
 
 }
 
@@ -329,18 +328,23 @@ function init()
     scene.graph.push(fnGenerateStarfield(500,2000));
 
     // rotate the camera around the scene
-    /**
+
     scene.onCamera(function(position, lookAt, up) {
         var rotMatrix = mat4.create();
         mat4.rotateY(rotMatrix, rotMatrix, Math.sin(Date.now()/10000)*Phoria.RADIANS*360);
         vec4.transformMat4(position, position, rotMatrix);
     });
-**/
+
     var light = Phoria.DistantLight.create({
-        color: [0.5,0.5,1.0],
-        direction: {x:0, y:-0.5, z:0}
+        color: [1.0,1.0,1.0],
+        direction: {x:1, y:-1, z:0}
+    });
+    var light2 = Phoria.DistantLight.create({
+        color: [1.0,1.0,1.0],
+        direction: {x:-1, y:-1, z:0}
     });
     scene.graph.push(light);
+    scene.graph.push(light2);
 
     var fnAnimate = function() {
         if (!pause)
