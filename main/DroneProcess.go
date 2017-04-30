@@ -6,6 +6,7 @@ import (
     "time"
     "log"
     "fmt"
+    "strings"
 )
 
 var droneObject DroneObject = DroneObject{}
@@ -50,7 +51,7 @@ func main() {
     http.HandleFunc("/proposeNewValue", proposeNewValue)
 
     droneObject = DroneObject{Position{x, y, z}, DroneType{"0", "normal", Dimensions{1, 2, 3}, Dimensions{1, 2, 3}, Speed{1, 2, 3}}, Speed{1, 2, 3}}
-    drone = Drone{droneId, getIpAddress() + ":" + port, droneObject}
+    drone = Drone{droneId, "localhost:" + port, droneObject}
     // Start the environment server and log any errors
     log.Println("http server started on " + drone.Address)
     err := http.ListenAndServe(":" + port, nil)
@@ -103,6 +104,7 @@ func heartbeat(w http.ResponseWriter, r *http.Request) {
 }
 
 func getDroneInfo(w http.ResponseWriter, r *http.Request) {
+    drone.Address = strings.Replace(drone.Address, "localhost", r.URL.Hostname(), -1)
     // log.Println("Drone.droneObject in getDroneInfo ", drone.droneObject)
     // log.Println("DroneObject in moveDrone ", droneObject)
     w.Header().Set("Access-Control-Allow-Origin", "*")
