@@ -76,26 +76,56 @@ func main() {
 //}
 
 func moveDrone(newPos Position, t float64) {
-    log.Println("Moving to ", newPos)
-    oldPos := droneObject.Pos
-    for {
-        if int(newPos.X) == int(droneObject.Pos.X) && int(newPos.Y) == int(droneObject.Pos.Y) && int(newPos.Z) == int(droneObject.Pos.Z) {
-            break
+        log.Println("Moving to ", newPos)
+        oldPos := droneObject.Pos
+        var deltaX, deltaY, deltaZ float64
+        deltaX = newPos.X - oldPos.X
+        deltaY = newPos.Y - oldPos.Y
+        deltaZ = newPos.Z - oldPos.Z
+        for i := 0; i < 10; i++ {
+                droneObject.Pos.X += (deltaX) / 10
+                droneObject.Pos.Y += (deltaY) / 10
+                droneObject.Pos.Z += (deltaZ) / 10
+
+                time.Sleep(time.Duration(1000000000))
+                drone.DroneObject = droneObject
         }
-        if int(newPos.X) != int(droneObject.Pos.X) {
-            droneObject.Pos.X += (newPos.X - oldPos.X) / t
-        }
-        if int(newPos.Y) != int(droneObject.Pos.Y) {
-            droneObject.Pos.Y += (newPos.Y - oldPos.Y) / t
-        }
-        if int(newPos.Z) != int(droneObject.Pos.Z) {
-            droneObject.Pos.Z += (newPos.Z - oldPos.Z) / t
-        }
+        oldPosAfter := droneObject.Pos
+        deltaX = newPos.X - oldPosAfter.X
+        deltaY = newPos.Y - oldPosAfter.Y
+        deltaZ = newPos.Z - oldPosAfter.Z
+        
+        droneObject.Pos.X += (deltaX) 
+        droneObject.Pos.Y += (deltaY)
+        droneObject.Pos.Z += (deltaZ) 
+
         time.Sleep(time.Duration(1000000000))
         drone.DroneObject = droneObject
-    }
-    log.Println("DroneObject in moveDrone", droneObject)
+
+        log.Println("DroneObject in moveDrone", droneObject)
 }
+
+//func moveDrone(newPos Position, t float64) 
+//    log.Println("Moving to ", newPos)
+//    oldPos := droneObject.Pos
+//    for {
+//        if int(newPos.X) == int(droneObject.Pos.X) && int(newPos.Y) == int(droneObject.Pos.Y) && int(newPos.Z) == int(droneObject.Pos.Z) {
+//            break
+//        }
+//        if int(newPos.X) != int(droneObject.Pos.X) {
+//            droneObject.Pos.X += (newPos.X - oldPos.X) / t
+//        }
+//        if int(newPos.Y) != int(droneObject.Pos.Y) {
+//            droneObject.Pos.Y += (newPos.Y - oldPos.Y) / t
+//        }
+//        if int(newPos.Z) != int(droneObject.Pos.Z) {
+//            droneObject.Pos.Z += (newPos.Z - oldPos.Z) / t
+//        }
+//        time.Sleep(time.Duration(1000000000))
+//        drone.DroneObject = droneObject
+//    }
+//    log.Println("DroneObject in moveDrone", droneObject)
+//}
 
 func heartbeat(w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Access-Control-Allow-Origin", "*")
