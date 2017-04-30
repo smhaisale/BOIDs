@@ -6,7 +6,6 @@ import (
     "time"
     "log"
     "fmt"
-    "strings"
 )
 
 var droneObject DroneObject = DroneObject{}
@@ -104,7 +103,7 @@ func heartbeat(w http.ResponseWriter, r *http.Request) {
 }
 
 func getDroneInfo(w http.ResponseWriter, r *http.Request) {
-    drone.Address = strings.Replace(drone.Address, "localhost", r.URL.Hostname(), -1)
+    drone.Address = r.URL.Host
     // log.Println("Drone.droneObject in getDroneInfo ", drone.droneObject)
     // log.Println("DroneObject in moveDrone ", droneObject)
     w.Header().Set("Access-Control-Allow-Origin", "*")
