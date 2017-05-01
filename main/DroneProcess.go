@@ -138,7 +138,8 @@ func moveToPosition(w http.ResponseWriter, r *http.Request) {
 	x, _ := strconv.ParseFloat(values.Get("X"), 64)
 	y, _ := strconv.ParseFloat(values.Get("Y"), 64)
 	z, _ := strconv.ParseFloat(values.Get("Z"), 64)
-	moveDrone(Position{x, y, z}, 20)
+	request(PathLock{drone.DroneObject.Pos, Position{x, y, z}})
+	//moveDrone(Position{x, y, z}, 20)
 }
 
 func addDroneTest(w http.ResponseWriter, r *http.Request) {

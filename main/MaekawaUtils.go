@@ -2,7 +2,6 @@ package main
 
 import (
 	"log"
-	"fmt"
 	"strconv"
 	"reflect"
 )
@@ -128,10 +127,7 @@ func handleRelease(msg MaekawaMessage) {
 func handleAck(msg MaekawaMessage) {
 	ackNo += 1
 	if ackNo >= len(permissionGroup) {
-		//todo enter cs
-		fmt.Println("Enter CS");
-		var stop string
-		fmt.Scanln(&stop);
+		moveDrone(msg.Path.To, 20)
 		release();
 	}
 }
