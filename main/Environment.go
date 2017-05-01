@@ -91,8 +91,9 @@ func killDrone(w http.ResponseWriter, r *http.Request) {
 
 func formPolygon(w http.ResponseWriter, r *http.Request) {
     log.Println("Received form polygon request")
+    size := r.URL.Query().Get("nodes")
     for _, drone := range droneMap {
-        address := "http://" + drone.Address + DRONE_FORM_POLYGON_URL
+        address := "http://" + drone.Address + DRONE_FORM_POLYGON_URL + "?size=" + size
         makeGetRequest(address, "")
         break
     }
@@ -101,8 +102,10 @@ func formPolygon(w http.ResponseWriter, r *http.Request) {
 
 func formShape(w http.ResponseWriter, r *http.Request) {
     log.Println("Received form polygon request")
+    shape := r.URL.Query().Get("shape")
+    size := r.URL.Query().Get("nodes")
     for _, drone := range droneMap {
-        address := "http://" + drone.Address + DRONE_FORM_SHAPE_URL
+        address := "http://" + drone.Address + DRONE_FORM_SHAPE_URL + "?shape=" + shape + "&size=" + size
         makeGetRequest(address, "")
         break
     }
