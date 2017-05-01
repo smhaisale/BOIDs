@@ -27,6 +27,7 @@ type MulticastMsgKey struct {
 
 var haveSeenMap map[MulticastMsgKey]bool = make(map[MulticastMsgKey]bool)
 var haveHandledMap map[MulticastMsgKey]bool = make(map[MulticastMsgKey]bool)
+var pathLockManager = PathLockManager{permissionGroup: make([]string, 0), currPathLockList:make(map[string]PathLock), pathRequestQueue:make(map[string]PathLock), myPathLock:PathLock{}, ackNo:0, seqNum: map[string]int{REQUEST:0, RELEASE:0, ACK:0, NACK:0}}
 
 var input_position = map[string]Position{
 	"Drone0": Position{0, 10, 0},
@@ -65,8 +66,11 @@ func main() {
 	http.HandleFunc("/req", reqTest)
 	http.HandleFunc("/add", addDroneTest)
 
-	randomPosition := Position{rand.Float64() * 20 - 10, rand.Float64() * 10, rand.Float64() * 20 - 10}
-	randomSpeed := Speed{rand.Float64() * 5, rand.Float64() * 5, rand.Float64() * 5}
+	//randomPosition := Position{rand.Float64() * 20 - 10, rand.Float64() * 10, rand.Float64() * 20 - 10}
+	//randomSpeed := Speed{rand.Float64() * 5, rand.Float64() * 5, rand.Float64() * 5}
+	var r = rand.New(rand.NewSource(time.Now().UnixNano()))
+	randomPosition := Position{r.Float64() * 10, r.Float64() * 10, r.Float64() * 10}
+	randomSpeed := Speed{r.Float64() * 5, r.Float64() * 5, r.Float64() * 5}
 
 	droneObject = DroneObject{randomPosition, DroneType{"0", "normal", Dimensions{1, 2, 3}, Dimensions{1, 2, 3}, Speed{1, 2, 3}}, randomSpeed}
 	drone = Drone{droneId, "localhost:" + port, droneObject}
@@ -97,38 +101,43 @@ func main() {
 //    }
 //}
 
+func move(newPos Position, t float64) {
+	log.Println("Moving to ", newPos)
+	oldPos := droneObject.Pos
+	var deltaX, deltaY, deltaZ float64
+	deltaX = newPos.X - oldPos.X
+	deltaY = newPos.Y - oldPos.Y
+	deltaZ = newPos.Z - oldPos.Z
+
+	iterations := (math.Abs(deltaX) + math.Abs(deltaY) + math.Abs(deltaZ)) * 1.0
+
+	for i := 0; i < int(iterations); i++ {
+		droneObject.Pos.X += (deltaX) / iterations
+		droneObject.Pos.Y += (deltaY) / iterations
+		droneObject.Pos.Z += (deltaZ) / iterations
+
+		time.Sleep(time.Duration(100000000))
+		drone.DroneObject = droneObject
+	}
+
+	oldPosAfter := droneObject.Pos
+	deltaX = newPos.X - oldPosAfter.X
+	deltaY = newPos.Y - oldPosAfter.Y
+	deltaZ = newPos.Z - oldPosAfter.Z
+
+	droneObject.Pos.X += (deltaX)
+	droneObject.Pos.Y += (deltaY)
+	droneObject.Pos.Z += (deltaZ)
+
+	time.Sleep(time.Duration(100000000))
+	drone.DroneObject = droneObject
+
+	log.Println("DroneObject in moveDrone", droneObject)
+}
+
 func moveDrone(newPos Position, t float64) {
-        log.Println("Moving to ", newPos)
-        oldPos := droneObject.Pos
-        var deltaX, deltaY, deltaZ float64
-        deltaX = newPos.X - oldPos.X
-        deltaY = newPos.Y - oldPos.Y
-        deltaZ = newPos.Z - oldPos.Z
-
-        iterations := (math.Abs(deltaX) + math.Abs(deltaY) + math.Abs(deltaZ)) * 1.0
-
-        for i := 0; i < int(iterations); i++ {
-                droneObject.Pos.X += (deltaX) / iterations
-                droneObject.Pos.Y += (deltaY) / iterations
-                droneObject.Pos.Z += (deltaZ) / iterations
-
-                time.Sleep(time.Duration(100000000))
-                drone.DroneObject = droneObject
-        }
-
-        oldPosAfter := droneObject.Pos
-        deltaX = newPos.X - oldPosAfter.X
-        deltaY = newPos.Y - oldPosAfter.Y
-        deltaZ = newPos.Z - oldPosAfter.Z
-
-        droneObject.Pos.X += (deltaX)
-        droneObject.Pos.Y += (deltaY)
-        droneObject.Pos.Z += (deltaZ)
-
-        time.Sleep(time.Duration(100000000))
-        drone.DroneObject = droneObject
-
-        log.Println("DroneObject in moveDrone", droneObject)
+        //pathLockManager.request(PathLock{drone.DroneObject.Pos, newPos})
+	move(newPos, t)
 }
 
 //func moveDrone(newPos Position, t float64)
@@ -178,8 +187,7 @@ func moveToPosition(w http.ResponseWriter, r *http.Request) {
 	x, _ := strconv.ParseFloat(values.Get("X"), 64)
 	y, _ := strconv.ParseFloat(values.Get("Y"), 64)
 	z, _ := strconv.ParseFloat(values.Get("Z"), 64)
-	request(PathLock{drone.DroneObject.Pos, Position{x, y, z}})
-	//moveDrone(Position{x, y, z}, 20)
+	moveDrone(Position{x, y, z}, 20)
 }
 
 func addDroneTest(w http.ResponseWriter, r *http.Request) {
@@ -295,7 +303,7 @@ func droneFormShape(w http.ResponseWriter, r *http.Request) {
 func reqTest(w http.ResponseWriter, r *http.Request) {
 	path := PathLock{}
 	getRequestBody(&path, r)
-	request(path)
+	//request(path)
 }
 
 func handleMaekawaMessage(w http.ResponseWriter, r *http.Request) {
@@ -314,11 +322,11 @@ func handleMaekawaMessage(w http.ResponseWriter, r *http.Request) {
 		log.Println("Received Maekawa Message " + msg.Type + " from " + origSender + " with seq " + strconv.Itoa(seqNum))
 		switch msg.Type {
 		case REQUEST:
-			handleRequest(msg)
+			pathLockManager.handleRequest(msg)
 		case RELEASE:
-			handleRelease(msg)
+			pathLockManager.handleRelease(msg)
 		case ACK:
-			handleAck(msg)
+			pathLockManager.handleAck(msg)
 		case NACK:
 			handleNack(msg)
 		}

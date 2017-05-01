@@ -5,6 +5,7 @@ import (
     "net/http"
     "math/rand"
     "strconv"
+    "time"
 )
 
 // Get drone configuration from local cache instead of creating mock data.
@@ -14,6 +15,7 @@ type UIMessage struct {
     MessageType     string  `json:"messageType"`
     Data            string  `json:"data"`
 }
+var r = rand.New(rand.NewSource(time.Now().UnixNano()))
 
 func main() {
 
@@ -33,9 +35,12 @@ func main() {
 }
 
 func getRandomCoordinates () (x, y, z string) {
-    x2 := rand.Float64() * 20.0 - 10.0
-    y2 := rand.Float64() * 10.0
-    z2 := rand.Float64() * 20.0 - 10.0
+    //x2 := rand.Float64() * 20.0 - 10.0
+    //y2 := rand.Float64() * 10.0
+    //z2 := rand.Float64() * 20.0 - 10.0
+    x2 := r.Float64() * 10.0
+    y2 := r.Float64() * 10.0
+    z2 := r.Float64() * 10.0
     log.Println("Random coordinates: ", x, y, z)
     x = strconv.FormatFloat(x2, 'f', 6, 64)
     y = strconv.FormatFloat(y2, 'f', 6, 64)
@@ -117,7 +122,9 @@ func randomPositions(w http.ResponseWriter, r *http.Request) {
     for _, drone := range droneMap {
         address := "http://" + drone.Address + DRONE_MOVE_TO_POSITION_URL
         x, y, z := getRandomCoordinates()
+        log.Println("random Position: (" + x + " " + y + " " + z + ")")
         asyncGetRequest(address + "?X=" + x + "&Y=" + y + "&Z=" + z, "")
+        //makeGetRequest(address + "?X=" + x + "&Y=" + y + "&Z=" + z, "")
     }
     w.Header().Set("Access-Control-Allow-Origin", "*")
 }
