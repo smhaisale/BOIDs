@@ -73,9 +73,9 @@ func addDrone(w http.ResponseWriter, r *http.Request) {
 }
 
 func killDrone(w http.ResponseWriter, r *http.Request) {
-    address := r.URL.Query().Get("data")
-    log.Println("Received kill drone request at address " + address)
-    killDrone, err := getDroneFromServer(address)
+    droneId := r.URL.Query().Get("data")
+    log.Println("Received kill drone request for " + droneId)
+    killDrone, err := getDroneFromServer(swarm[droneId].Address)
     if err != nil {
         log.Println("Error! ", err)
         return

@@ -246,7 +246,21 @@ func droneFormPolygon(w http.ResponseWriter, r *http.Request) {
 
 func droneFormShape(w http.ResponseWriter, r *http.Request) {
     log.Println("Received form polygon request at " + drone.ID)
-    index, positions := 0, calculateCoordinates(len(swarm) + 1, 3,10)
+    shape :=  r.URL.Query().Get("shape")
+    size, err := strconv.Atoi(r.URL.Query().Get("size"))
+    if err != nil {
+        size = len(swarm) + 1
+    }
+    radius := 5 + rand.Float64() * 10
+    positions := []Position{}
+    if shape == "pyramid" {
+        positions = calculateCoordinatesForPyramid(len(swarm) + 1, size,radius)
+    } else if shape == "bipyramid" {
+        positions = calculateCoordinatesForPyramid(len(swarm) + 1, size,radius)
+    } else if shape == "prism" {
+        positions = calculateCoordinatesForPyramid(len(swarm) + 1, size,radius)
+    }
+    index := 0
     instruction := MoveInstruction{}
     instruction.Positions = map[string]Position{}
     for _, swarmDrone := range swarm {
