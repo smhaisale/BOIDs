@@ -95,7 +95,6 @@ func min(list ...int) int {
 func getPolygonCoordinates(size int, total int) []Position {
     positions := make([]Position, total, 2*total)
     polygon := calculateCoordinates(size, 2, 5 + rand.Float64() * 10)
-    #polygon := calculateCoordinatesForBipyramid(size, size, 5 + rand.Float64() * 10)
     for i := 0; i < total; i++ {
         if i < size {
             positions[i] = polygon[i]
