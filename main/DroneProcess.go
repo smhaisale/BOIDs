@@ -256,9 +256,9 @@ func droneFormShape(w http.ResponseWriter, r *http.Request) {
     if shape == "pyramid" {
         positions = calculateCoordinatesForPyramid(len(swarm) + 1, size,radius)
     } else if shape == "bipyramid" {
-        positions = calculateCoordinatesForPyramid(len(swarm) + 1, size,radius)
+        positions = calculateCoordinatesForBipyramid(len(swarm) + 1, size,radius)
     } else if shape == "prism" {
-        positions = calculateCoordinatesForPyramid(len(swarm) + 1, size,radius)
+        positions = calculateCoordinatesForPrism(len(swarm) + 1, size,radius)
     }
     index := 0
     instruction := MoveInstruction{}
