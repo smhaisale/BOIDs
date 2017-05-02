@@ -3,12 +3,12 @@ package main
 import (
 	"fmt"
 	"log"
+	"math"
+	"math/rand"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
-	"math/rand"
-	"math"
 )
 
 var droneObject DroneObject = DroneObject{}
@@ -27,7 +27,7 @@ type MulticastMsgKey struct {
 
 var haveSeenMap map[MulticastMsgKey]bool = make(map[MulticastMsgKey]bool)
 var haveHandledMap map[MulticastMsgKey]bool = make(map[MulticastMsgKey]bool)
-var pathLockManager = PathLockManager{permissionGroup: make([]string, 0), currPathLockList:make(map[string]PathLock), pathRequestQueue:make(map[string]PathLock), myPathLock:PathLock{}, ackNo:0, seqNum: map[string]int{REQUEST:0, RELEASE:0, ACK:0, NACK:0}}
+var pathLockManager = PathLockManager{permissionGroup: make([]string, 0), currPathLockList: make(map[string]PathLock), pathRequestQueue: make(map[string]PathLock), myPathLock: PathLock{}, ackNo: 0, seqNum: map[string]int{REQUEST: 0, RELEASE: 0, ACK: 0, NACK: 0}}
 
 var input_position = map[string]Position{
 	"Drone0": Position{0, 10, 0},
@@ -136,8 +136,8 @@ func move(newPos Position, t float64) {
 }
 
 func moveDrone(newPos Position, t float64) {
-        //pathLockManager.request(PathLock{drone.DroneObject.Pos, newPos})
-	move(newPos, t)
+	pathLockManager.request(PathLock{drone.DroneObject.Pos, newPos})
+	//move(newPos, t)
 }
 
 //func moveDrone(newPos Position, t float64)
@@ -168,11 +168,11 @@ func heartbeat(w http.ResponseWriter, r *http.Request) {
 }
 
 func getDroneInfo(w http.ResponseWriter, r *http.Request) {
-    drone.Address = r.Host
-    // log.Println("Drone.droneObject in getDroneInfo ", drone.droneObject)
-    // log.Println("DroneObject in moveDrone ", droneObject)
-    w.Header().Set("Access-Control-Allow-Origin", "*")
-    w.Write([]byte(toJsonString(drone)))
+	drone.Address = r.Host
+	// log.Println("Drone.droneObject in getDroneInfo ", drone.droneObject)
+	// log.Println("DroneObject in moveDrone ", droneObject)
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Write([]byte(toJsonString(drone)))
 }
 
 func updateSwarmInfo(w http.ResponseWriter, r *http.Request) {
@@ -188,6 +188,7 @@ func moveToPosition(w http.ResponseWriter, r *http.Request) {
 	y, _ := strconv.ParseFloat(values.Get("Y"), 64)
 	z, _ := strconv.ParseFloat(values.Get("Z"), 64)
 	moveDrone(Position{x, y, z}, 20)
+	w.Write([]byte(toJsonString(swarm)))
 }
 
 func addDroneTest(w http.ResponseWriter, r *http.Request) {
@@ -269,35 +270,35 @@ func handlePaxosMessage(w http.ResponseWriter, r *http.Request) {
 }
 
 func droneFormPolygon(w http.ResponseWriter, r *http.Request) {
-    log.Println("Received form polygon request at " + drone.ID)
-    size, err := strconv.Atoi(r.URL.Query().Get("size"))
-    if err != nil {
-        size = len(swarm) + 1
-    }
-    index, positions := 0, getPolygonCoordinates(size, len(swarm) + 1)
-    instruction := MoveInstruction{}
-    instruction.Positions = map[string]Position{}
-    for _, swarmDrone := range swarm {
-        instruction.Positions[swarmDrone.ID] = positions[index]
-        index++
-    }
-    instruction.Positions[drone.ID] = positions[index]
-    message := formPolygonPaxosClient.createPrepareMessage(toJsonString(instruction))
-    formPolygonPaxosClient.sendPaxosMessage(message)
+	log.Println("Received form polygon request at " + drone.ID)
+	size, err := strconv.Atoi(r.URL.Query().Get("size"))
+	if err != nil {
+		size = len(swarm) + 1
+	}
+	index, positions := 0, getPolygonCoordinates(size, len(swarm)+1)
+	instruction := MoveInstruction{}
+	instruction.Positions = map[string]Position{}
+	for _, swarmDrone := range swarm {
+		instruction.Positions[swarmDrone.ID] = positions[index]
+		index++
+	}
+	instruction.Positions[drone.ID] = positions[index]
+	message := formPolygonPaxosClient.createPrepareMessage(toJsonString(instruction))
+	formPolygonPaxosClient.sendPaxosMessage(message)
 }
 
 func droneFormShape(w http.ResponseWriter, r *http.Request) {
-    log.Println("Received form polygon request at " + drone.ID)
-    index, positions := 0, calculateCoordinates(len(swarm) + 1, 3,10)
-    instruction := MoveInstruction{}
-    instruction.Positions = map[string]Position{}
-    for _, swarmDrone := range swarm {
-        instruction.Positions[swarmDrone.ID] = positions[index]
-        index++
-    }
-    instruction.Positions[drone.ID] = positions[index]
-    message := formPolygonPaxosClient.createPrepareMessage(toJsonString(instruction))
-    formPolygonPaxosClient.sendPaxosMessage(message)
+	log.Println("Received form polygon request at " + drone.ID)
+	index, positions := 0, calculateCoordinates(len(swarm)+1, 3, 10)
+	instruction := MoveInstruction{}
+	instruction.Positions = map[string]Position{}
+	for _, swarmDrone := range swarm {
+		instruction.Positions[swarmDrone.ID] = positions[index]
+		index++
+	}
+	instruction.Positions[drone.ID] = positions[index]
+	message := formPolygonPaxosClient.createPrepareMessage(toJsonString(instruction))
+	formPolygonPaxosClient.sendPaxosMessage(message)
 }
 
 func reqTest(w http.ResponseWriter, r *http.Request) {
