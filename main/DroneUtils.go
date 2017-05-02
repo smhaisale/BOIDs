@@ -94,12 +94,12 @@ func min(list ...int) int {
 
 func getPolygonCoordinates(size int, total int) []Position {
     positions := make([]Position, total, 2*total)
-    polygon := calculateCoordinates(size, 2, 5 + rand.Float64() * 10)
+    polygon := calculateCoordinates(size, 2, 5 + rand.Float64() * 15)
     for i := 0; i < total; i++ {
         if i < size {
             positions[i] = polygon[i]
         } else {
-            positions[i] = Position{rand.Float64() * 20 - 10, 0, rand.Float64() * 20 - 10}
+            positions[i] = Position{rand.Float64() * 40 - 20, 0, rand.Float64() * 40 - 20}
         }
     }
     return positions

@@ -33,9 +33,9 @@ func main() {
 }
 
 func getRandomCoordinates () (x, y, z string) {
-    x2 := rand.Float64() * 20.0 - 10.0
-    y2 := rand.Float64() * 10.0
-    z2 := rand.Float64() * 20.0 - 10.0
+    x2 := rand.Float64() * 30.0 - 15.0
+    y2 := rand.Float64() * 20.0
+    z2 := rand.Float64() * 30.0 - 15.0
     log.Println("Random coordinates: ", x, y, z)
     x = strconv.FormatFloat(x2, 'f', 6, 64)
     y = strconv.FormatFloat(y2, 'f', 6, 64)
@@ -73,6 +73,21 @@ func addDrone(w http.ResponseWriter, r *http.Request) {
 }
 
 func killDrone(w http.ResponseWriter, r *http.Request) {
+    droneId := r.URL.Query().Get("data")
+    log.Println("Received kill drone request for " + droneId)
+    address := droneMap[droneId].Address
+    killDrone, err := getDroneFromServer(address)
+    if err != nil {
+        log.Println("Error! ", err)
+        return
+    } else {
+        delete(droneMap, killDrone.ID)
+        for _, swarmDrone := range droneMap {
+            killDroneAddress := "http://" + swarmDrone.Address + DRONE_KILL_DRONE_URL + "?address=" + address
+            makeGetRequest(killDroneAddress, "")
+        }
+    }
+    w.Header().Set("Access-Control-Allow-Origin", "*")
 }
 
 func formPolygon(w http.ResponseWriter, r *http.Request) {

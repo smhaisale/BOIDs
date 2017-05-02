@@ -32,6 +32,8 @@ type MoveInstruction struct {
 
 func main() {
 
+    rand.Seed( time.Now().UTC().UnixNano())
+
     var droneId, port string
     var x, y, z float64
     fmt.Println("Provide drone ID, port: ")
@@ -51,7 +53,7 @@ func main() {
     http.HandleFunc(DRONE_FORM_SHAPE_URL, droneFormShape)
     http.HandleFunc("/proposeNewValue", proposeNewValue)
 
-    randomPosition := Position{rand.Float64() * 20 - 10, rand.Float64() * 10, rand.Float64() * 20 - 10}
+    randomPosition := Position{rand.Float64() * 30 - 15, rand.Float64() * 20, rand.Float64() * 30 - 15}
     randomSpeed := Speed{rand.Float64() * 5, rand.Float64() * 5, rand.Float64() * 5}
 
     droneObject = DroneObject{randomPosition, DroneType{"0", "normal", Dimensions{1, 2, 3}, Dimensions{1, 2, 3}, Speed{1, 2, 3}}, randomSpeed}
@@ -63,22 +65,6 @@ func main() {
         log.Fatal("ListenAndServe: ", err)
     }
 }
-
-//func moveDrone(newPos Position, speed Speed) {
-//    log.Println("Moving to ", newPos)
-//    tX := math.Abs((newPos.X - drone.Pos.X) / speed.VX)
-//    tY := math.Abs((newPos.Y - drone.Pos.Y) / speed.VY)
-//    tZ := math.Abs((newPos.Z - drone.Pos.Z) / speed.VZ)
-//
-//    t := math.Max(tX, math.Max(tY, tZ))
-//
-//    for i := 0; i < int(t + 0.5); i++ {
-//        drone.Pos.X += (newPos.X - drone.Pos.X) / t
-//        drone.Pos.Y += (newPos.Y - drone.Pos.Y) / t
-//        drone.Pos.Z += (newPos.Z - drone.Pos.Z) / t
-//        time.Sleep(time.Duration(1000000000))
-//    }
-//}
 
 func moveDrone(newPos Position, t float64) {
         log.Println("Moving to ", newPos)
@@ -114,28 +100,6 @@ func moveDrone(newPos Position, t float64) {
         log.Println("DroneObject in moveDrone", droneObject)
 }
 
-//func moveDrone(newPos Position, t float64) 
-//    log.Println("Moving to ", newPos)
-//    oldPos := droneObject.Pos
-//    for {
-//        if int(newPos.X) == int(droneObject.Pos.X) && int(newPos.Y) == int(droneObject.Pos.Y) && int(newPos.Z) == int(droneObject.Pos.Z) {
-//            break
-//        }
-//        if int(newPos.X) != int(droneObject.Pos.X) {
-//            droneObject.Pos.X += (newPos.X - oldPos.X) / t
-//        }
-//        if int(newPos.Y) != int(droneObject.Pos.Y) {
-//            droneObject.Pos.Y += (newPos.Y - oldPos.Y) / t
-//        }
-//        if int(newPos.Z) != int(droneObject.Pos.Z) {
-//            droneObject.Pos.Z += (newPos.Z - oldPos.Z) / t
-//        }
-//        time.Sleep(time.Duration(1000000000))
-//        drone.DroneObject = droneObject
-//    }
-//    log.Println("DroneObject in moveDrone", droneObject)
-//}
-
 func heartbeat(w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Access-Control-Allow-Origin", "*")
     w.Write([]byte(toJsonString(drone.ID)))
@@ -154,13 +118,40 @@ func updateSwarmInfo(w http.ResponseWriter, r *http.Request) {
     w.Write([]byte(toJsonString(swarm)))
 }
 
+func getRandomPerpendicularPoints(from, to, between Position) (x, y, z float64) {
+    x = between.X + 2 - rand.Float64() * 4
+    y = between.Y + 2 - rand.Float64() * 4
+    dX, dY, dZ := to.X - from.X, to.Y - from.Y, to.Z - from.Z
+    z = (between.X * dX + between.Y * dY + between.Z * dZ - x * dX - y * dY) / dZ
+    return
+}
+
 func moveToPosition(w http.ResponseWriter, r *http.Request) {
-   // log.Println("Drone.droneObject in moveToPosition ", drone.droneObject)
-  //  log.Println("DroneObject in moveToPosition ", droneObject)
+
     values := r.URL.Query()
     x, _ := strconv.ParseFloat(values.Get("X"), 64)
     y, _ := strconv.ParseFloat(values.Get("Y"), 64)
     z, _ := strconv.ParseFloat(values.Get("Z"), 64)
+
+    // Somehow ensure that the path is free - move other drones out of the way
+
+    for _, swarmDrone := range swarm {
+        flagY, flagZ := false, false
+        deltaX := x - droneObject.Pos.X
+        swarmDeltaX := x - swarmDrone.DroneObject.Pos.X
+        if (z - droneObject.Pos.Z) / deltaX == (z - swarmDrone.DroneObject.Pos.Z) / swarmDeltaX {
+            flagZ = true
+        }
+        if (y - droneObject.Pos.Y) / deltaX == (y - swarmDrone.DroneObject.Pos.Y) / swarmDeltaX {
+            flagY = true
+        }
+        if flagY && flagZ {
+            x, y, z := getRandomPerpendicularPoints(droneObject.Pos, Position{x, y, z}, swarmDrone.DroneObject.Pos)
+            url := swarmDrone.Address + DRONE_MOVE_TO_POSITION_URL + "?X=" + strconv.FormatFloat(x, 'f', -1, 64) + "&Y=" + strconv.FormatFloat(y, 'f', -1, 64) + "&Z=" + strconv.FormatFloat(z, 'f', -1, 64)
+            makeGetRequest("http://" + url, "")
+        }
+    }
+
     moveDrone(Position{x, y, z}, 20)
 }
 
