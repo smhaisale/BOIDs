@@ -44,6 +44,8 @@ type MoveInstruction struct {
 
 func main() {
 
+    rand.Seed( time.Now().UTC().UnixNano())
+
     var droneId, port string
     var x, y, z float64
     fmt.Println("Provide drone ID, port: ")
@@ -64,11 +66,8 @@ func main() {
     http.HandleFunc("/proposeNewValue", proposeNewValue)
     http.HandleFunc(DRONE_MAEKAWA_MESSAGE_URL, handleMaekawaMessage)
 
-    var r = rand.New(rand.NewSource(time.Now().UnixNano()))
-    randomPosition := Position{r.Float64() * 10, r.Float64() * 10, r.Float64() * 10}
-    randomSpeed := Speed{r.Float64() * 5, r.Float64() * 5, r.Float64() * 5}
-    //randomPosition := Position{rand.Float64() * 20 - 10, rand.Float64() * 10, rand.Float64() * 20 - 10}
-    //randomSpeed := Speed{rand.Float64() * 5, rand.Float64() * 5, rand.Float64() * 5}
+    randomPosition := Position{rand.Float64() * 30 - 15, rand.Float64() * 20, rand.Float64() * 30 - 15}
+    randomSpeed := Speed{rand.Float64() * 5, rand.Float64() * 5, rand.Float64() * 5}
 
     droneObject = DroneObject{randomPosition, DroneType{"0", "normal", Dimensions{1, 2, 3}, Dimensions{1, 2, 3}, Speed{1, 2, 3}}, randomSpeed}
     drone = Drone{droneId, "localhost:" + port, droneObject}
@@ -135,13 +134,40 @@ func updateSwarmInfo(w http.ResponseWriter, r *http.Request) {
     w.Write([]byte(toJsonString(swarm)))
 }
 
+func getRandomPerpendicularPoints(from, to, between Position) (x, y, z float64) {
+    x = between.X + 2 - rand.Float64() * 4
+    y = between.Y + 2 - rand.Float64() * 4
+    dX, dY, dZ := to.X - from.X, to.Y - from.Y, to.Z - from.Z
+    z = (between.X * dX + between.Y * dY + between.Z * dZ - x * dX - y * dY) / dZ
+    return
+}
+
 func moveToPosition(w http.ResponseWriter, r *http.Request) {
-   // log.Println("Drone.droneObject in moveToPosition ", drone.droneObject)
-  //  log.Println("DroneObject in moveToPosition ", droneObject)
+
     values := r.URL.Query()
     x, _ := strconv.ParseFloat(values.Get("X"), 64)
     y, _ := strconv.ParseFloat(values.Get("Y"), 64)
     z, _ := strconv.ParseFloat(values.Get("Z"), 64)
+
+	// todo make sure it works with Maekawa
+	// Somehow ensure that the path is free - move other drones out of the way
+    for _, swarmDrone := range swarm {
+        flagY, flagZ := false, false
+        deltaX := x - droneObject.Pos.X
+        swarmDeltaX := x - swarmDrone.DroneObject.Pos.X
+        if (z - droneObject.Pos.Z) / deltaX == (z - swarmDrone.DroneObject.Pos.Z) / swarmDeltaX {
+            flagZ = true
+        }
+        if (y - droneObject.Pos.Y) / deltaX == (y - swarmDrone.DroneObject.Pos.Y) / swarmDeltaX {
+            flagY = true
+        }
+        if flagY && flagZ {
+            x, y, z := getRandomPerpendicularPoints(droneObject.Pos, Position{x, y, z}, swarmDrone.DroneObject.Pos)
+            url := swarmDrone.Address + DRONE_MOVE_TO_POSITION_URL + "?X=" + strconv.FormatFloat(x, 'f', -1, 64) + "&Y=" + strconv.FormatFloat(y, 'f', -1, 64) + "&Z=" + strconv.FormatFloat(z, 'f', -1, 64)
+            makeGetRequest("http://" + url, "")
+        }
+    }
+
     moveDrone(Position{x, y, z}, 20)
 }
 
@@ -197,7 +223,6 @@ func handlePaxosMessage(w http.ResponseWriter, r *http.Request) {
         paxosClient.handlePaxosMessage(message)
     case 2:
         result := formPolygonPaxosClient.handlePaxosMessage(message)
-        log.Println("HAS RESULT" + result)
         if result != "" {
             log.Println("Handle Paxos Message result : " + result)
             instruction := MoveInstruction{}
@@ -228,7 +253,21 @@ func droneFormPolygon(w http.ResponseWriter, r *http.Request) {
 
 func droneFormShape(w http.ResponseWriter, r *http.Request) {
     log.Println("Received form polygon request at " + drone.ID)
-    index, positions := 0, calculateCoordinates(len(swarm) + 1, 3,10)
+    shape :=  r.URL.Query().Get("shape")
+    size, err := strconv.Atoi(r.URL.Query().Get("size"))
+    if err != nil {
+        size = len(swarm) + 1
+    }
+    radius := 5 + rand.Float64() * 10
+    positions := []Position{}
+    if shape == "pyramid" {
+        positions = calculateCoordinatesForPyramid(len(swarm) + 1, size,radius)
+    } else if shape == "bipyramid" {
+        positions = calculateCoordinatesForBipyramid(len(swarm) + 1, size,radius)
+    } else if shape == "prism" {
+        positions = calculateCoordinatesForPrism(len(swarm) + 1, size,radius)
+    }
+    index := 0
     instruction := MoveInstruction{}
     instruction.Positions = map[string]Position{}
     for _, swarmDrone := range swarm {

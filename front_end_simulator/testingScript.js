@@ -165,6 +165,42 @@ function formPolygon() {
     })
 }
 
+function formPrism() {
+    var formPolygonUrl = 'http://' + document.location.hostname + ':18842/formShape?shape=prism';
+    $.ajax({
+        type: 'GET',
+        dataType: 'json',
+        url: formPolygonUrl,
+        success: function (data) {
+            console.log("Sent form prism request");
+        }
+    })
+}
+
+function formPyramid() {
+    var formPolygonUrl = 'http://' + document.location.hostname + ':18842/formShape?shape=pyramid';
+    $.ajax({
+        type: 'GET',
+        dataType: 'json',
+        url: formPolygonUrl,
+        success: function (data) {
+            console.log("Sent form pyramid request");
+        }
+    })
+}
+
+function formBipyramid() {
+    var formPolygonUrl = 'http://' + document.location.hostname + ':18842/formShape?shape=bipyramid';
+    $.ajax({
+        type: 'GET',
+        dataType: 'json',
+        url: formPolygonUrl,
+        success: function (data) {
+            console.log("Sent form bipyramid request");
+        }
+    })
+}
+
 function randomPositions() {
     var randomPositionsUrl = 'http://' + document.location.hostname + ':18842/randomPositions';
     $.ajax({
@@ -410,7 +446,10 @@ function init()
         position : '',
         formPolygon: function() { formPolygon()},
         randomPositions: function() { randomPositions()},
-        setDronePosition: function() { setDronePosition()}
+        setDronePosition: function() { setDronePosition()},
+        formPrism: function() { formPrism()},
+        formPyramid: function() { formPyramid()},
+        formBipyramid: function() { formBipyramid()}
     };
 
     // add GUI controls
@@ -450,10 +489,13 @@ function init()
     f.add(drone, 'start').name('Running').onFinishChange(function(){flipPause()});
     f.add(drone, 'debug').name('Show Debug Info').onFinishChange(function(){flipDebug()});
     f.add(drone, 'address').name('Add Drone').onFinishChange(function(){addDroneToEnvironment(drone.address)});
-    f.add(drone, 'id').name('Kill Drone').onFinishChange(function(){addDroneToEnvironment(drone.id)});
+   // f.add(drone, 'id').name('Kill Drone').onFinishChange(function(){addDroneToEnvironment(drone.id)});
     f.add(drone, 'position').name('Set drone position').onFinishChange(function(){setDronePosition(drone.position)});
     f.add(drone, 'formPolygon').name('Form Polygon');
     f.add(drone, 'randomPositions').name('Random Positions');
+    f.add(drone, 'formPrism').name('Form Prism');
+    f.add(drone, 'formPyramid').name('Form Pyramid');
+    f.add(drone, 'formBipyramid').name('Form Bipyramid');
     f.open();
 
     // start animation

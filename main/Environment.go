@@ -33,9 +33,9 @@ func main() {
 }
 
 func getRandomCoordinates () (x, y, z string) {
-    x2 := rand.Float64() * 20.0 - 10.0
-    y2 := rand.Float64() * 10.0
-    z2 := rand.Float64() * 20.0 - 10.0
+    x2 := rand.Float64() * 30.0 - 15.0
+    y2 := rand.Float64() * 20.0
+    z2 := rand.Float64() * 30.0 - 15.0
     log.Println("Random coordinates: ", x, y, z)
     x = strconv.FormatFloat(x2, 'f', 6, 64)
     y = strconv.FormatFloat(y2, 'f', 6, 64)
@@ -73,8 +73,9 @@ func addDrone(w http.ResponseWriter, r *http.Request) {
 }
 
 func killDrone(w http.ResponseWriter, r *http.Request) {
-    address := r.URL.Query().Get("data")
-    log.Println("Received kill drone request at address " + address)
+    droneId := r.URL.Query().Get("data")
+    log.Println("Received kill drone request for " + droneId)
+    address := droneMap[droneId].Address
     killDrone, err := getDroneFromServer(address)
     if err != nil {
         log.Println("Error! ", err)

@@ -95,12 +95,12 @@ func min(list ...int) int {
 
 func getPolygonCoordinates(size int, total int) []Position {
     positions := make([]Position, total, 2*total)
-    polygon := calculateCoordinates(size, 2, 5 + rand.Float64() * 10)
+    polygon := calculateCoordinates(size, 2, 5 + rand.Float64() * 15)
     for i := 0; i < total; i++ {
         if i < size {
             positions[i] = polygon[i]
         } else {
-            positions[i] = Position{rand.Float64() * 20 - 10, 0, rand.Float64() * 20 - 10}
+            positions[i] = Position{rand.Float64() * 40 - 20, 0, rand.Float64() * 40 - 20}
         }
     }
     return positions
@@ -109,17 +109,20 @@ func getPolygonCoordinates(size int, total int) []Position {
 func calculateCoordinatesForPrism(n int, usedDrones int, radius float64) []Position{
 	posArray := make([]Position, n, 2*n)
         var angle float64
-        angle = float64 (2) * math.Pi / float64(n)
+        angle = float64 (2) * math.Pi / float64(usedDrones/2)
         var x,y,z float64
-        for i := 0; i < n/2; i++ {
+        for i := 0; i < usedDrones/2; i++ {
             x = 0 + radius * math.Sin(float64(i) * angle)
-            y = 5
+            y = 5                 
             z = 0 + radius * math.Cos(float64(i) * angle)
-            posArray[i] = Position{ x, y, z }
-            posArray[2*i] = Position{ x, y + radius, z }
+            posArray[i] = Position{ x, y, z } 
+            posArray[n/2 + i] = Position{ x, y + radius, z }
         }
-        if (n%2 != 0) {
-            posArray[n-1] = Position {0, 5 + (radius/math.Sqrt(2)), 0}
+        if (usedDrones%2 != 0) {
+            posArray[usedDrones-1] = Position {float64(usedDrones - 1), 0, 0}
+        }
+        for i := usedDrones; i < n - usedDrones; i++ {
+            posArray[i] = Position {float64(2*i), 0 , 0}
         }
         return posArray
 }
@@ -127,31 +130,37 @@ func calculateCoordinatesForPrism(n int, usedDrones int, radius float64) []Posit
 func calculateCoordinatesForPyramid(n int, usedDrones int, radius float64) []Position{
         posArray := make([]Position, n, 2*n)
         var angle float64
-        angle = float64 (2) * math.Pi / float64(n)
+        angle = float64 (2) * math.Pi / float64(usedDrones-1)
         var x,y,z float64
-        for i := 0; i < n-1; i++ {
+        for i := 0; i < usedDrones-1; i++ {
             x = 0 + radius * math.Sin(float64(i) * angle)
             y = 5
             z = 0 + radius * math.Cos(float64(i) * angle)
             posArray[i] = Position{ x, y, z }
         }
-        posArray[n-1] = Position {0, 5 + (radius/math.Sqrt(2)), 0}
+        posArray[usedDrones-1] = Position {0, 5 + (radius/math.Sqrt(2)), 0}
+        for i := usedDrones; i < n - usedDrones; i++ {
+            posArray[i] = Position {float64(2*i), 0 , 0}
+        }
         return posArray
 }
 
 func calculateCoordinatesForBipyramid(n int, usedDrones int, radius float64) []Position{
         posArray := make([]Position, n, 2*n)
         var angle float64
-        angle = float64 (2) * math.Pi / float64(n)
+        angle = float64 (2) * math.Pi / float64(usedDrones-2)
         var x,y,z float64
-        for i := 0; i < n-2; i++ {
+        for i := 0; i < usedDrones-2; i++ {
             x = 0 + radius * math.Sin(float64(i) * angle)
             y = 5
             z = 0 + radius * math.Cos(float64(i) * angle)
             posArray[i] = Position{ x, y, z }
         }
-        posArray[n-2] = Position {0, 5 + (radius/math.Sqrt(2)), 0}
-        posArray[n-1] = Position {0, (-5 - (radius/math.Sqrt(2))), 0}
+        posArray[usedDrones-2] = Position {0, 5 + (radius/math.Sqrt(2)), 0}
+        posArray[usedDrones-1] = Position {0, (5 - (radius/math.Sqrt(2))), 0}
+        for i := usedDrones; i < n - usedDrones; i++ {
+            posArray[i] = Position {-(float64(2*i)), 0 , 0}
+        }
         return posArray
 }
 
