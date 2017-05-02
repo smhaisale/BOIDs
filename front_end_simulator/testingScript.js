@@ -166,7 +166,7 @@ function formPolygon() {
 }
 
 function formPrism() {
-    var formPolygonUrl = 'http://' + document.location.hostname + ':18842//formShape?shape=prism';
+    var formPolygonUrl = 'http://' + document.location.hostname + ':18842/formShape?shape=prism';
     $.ajax({
         type: 'GET',
         dataType: 'json',
