@@ -8,6 +8,7 @@ import (
     "fmt"
     "math/rand"
     "math"
+    "strings"
 )
 
 var droneObject DroneObject = DroneObject{}
@@ -25,6 +26,17 @@ var input_position = map[string]Position {
     "Drone4" : Position{0, 50, 0},
     "Drone5" : Position{0, 60, 0},
 }
+
+type MulticastMsgKey struct {
+    OrigSender string
+    Dest       string
+    Type       string
+    SeqNum     int
+}
+var haveSeenMap map[MulticastMsgKey]bool = make(map[MulticastMsgKey]bool)
+var haveHandledMap map[MulticastMsgKey]bool = make(map[MulticastMsgKey]bool)
+var pathLockManager = PathLockManager{permissionGroup: make([]string, 0), currPathLockList: make(map[string]PathLock), pathRequestQueue: make(map[string]PathLock), myPathLock: PathLock{}, ackNo: 0, seqNum: map[string]int{REQUEST: 0, RELEASE: 0, ACK: 0, NACK: 0}}
+
 
 type MoveInstruction struct {
     Positions map[string]Position
@@ -50,9 +62,13 @@ func main() {
     http.HandleFunc(DRONE_FORM_POLYGON_URL, droneFormPolygon)
     http.HandleFunc(DRONE_FORM_SHAPE_URL, droneFormShape)
     http.HandleFunc("/proposeNewValue", proposeNewValue)
+    http.HandleFunc(DRONE_MAEKAWA_MESSAGE_URL, handleMaekawaMessage)
 
-    randomPosition := Position{rand.Float64() * 20 - 10, rand.Float64() * 10, rand.Float64() * 20 - 10}
-    randomSpeed := Speed{rand.Float64() * 5, rand.Float64() * 5, rand.Float64() * 5}
+    var r = rand.New(rand.NewSource(time.Now().UnixNano()))
+    randomPosition := Position{r.Float64() * 10, r.Float64() * 10, r.Float64() * 10}
+    randomSpeed := Speed{r.Float64() * 5, r.Float64() * 5, r.Float64() * 5}
+    //randomPosition := Position{rand.Float64() * 20 - 10, rand.Float64() * 10, rand.Float64() * 20 - 10}
+    //randomSpeed := Speed{rand.Float64() * 5, rand.Float64() * 5, rand.Float64() * 5}
 
     droneObject = DroneObject{randomPosition, DroneType{"0", "normal", Dimensions{1, 2, 3}, Dimensions{1, 2, 3}, Speed{1, 2, 3}}, randomSpeed}
     drone = Drone{droneId, "localhost:" + port, droneObject}
@@ -63,78 +79,43 @@ func main() {
         log.Fatal("ListenAndServe: ", err)
     }
 }
+func move(newPos Position) {
+    log.Println("Moving to ", newPos)
+    oldPos := droneObject.Pos
+    var deltaX, deltaY, deltaZ float64
+    deltaX = newPos.X - oldPos.X
+    deltaY = newPos.Y - oldPos.Y
+    deltaZ = newPos.Z - oldPos.Z
 
-//func moveDrone(newPos Position, speed Speed) {
-//    log.Println("Moving to ", newPos)
-//    tX := math.Abs((newPos.X - drone.Pos.X) / speed.VX)
-//    tY := math.Abs((newPos.Y - drone.Pos.Y) / speed.VY)
-//    tZ := math.Abs((newPos.Z - drone.Pos.Z) / speed.VZ)
-//
-//    t := math.Max(tX, math.Max(tY, tZ))
-//
-//    for i := 0; i < int(t + 0.5); i++ {
-//        drone.Pos.X += (newPos.X - drone.Pos.X) / t
-//        drone.Pos.Y += (newPos.Y - drone.Pos.Y) / t
-//        drone.Pos.Z += (newPos.Z - drone.Pos.Z) / t
-//        time.Sleep(time.Duration(1000000000))
-//    }
-//}
+    iterations := (math.Abs(deltaX) + math.Abs(deltaY) + math.Abs(deltaZ)) * 1.0
 
-func moveDrone(newPos Position, t float64) {
-        log.Println("Moving to ", newPos)
-        oldPos := droneObject.Pos
-        var deltaX, deltaY, deltaZ float64
-        deltaX = newPos.X - oldPos.X
-        deltaY = newPos.Y - oldPos.Y
-        deltaZ = newPos.Z - oldPos.Z
-
-        iterations := (math.Abs(deltaX) + math.Abs(deltaY) + math.Abs(deltaZ)) * 1.0
-
-        for i := 0; i < int(iterations); i++ {
-                droneObject.Pos.X += (deltaX) / iterations
-                droneObject.Pos.Y += (deltaY) / iterations
-                droneObject.Pos.Z += (deltaZ) / iterations
-
-                time.Sleep(time.Duration(100000000))
-                drone.DroneObject = droneObject
-        }
-
-        oldPosAfter := droneObject.Pos
-        deltaX = newPos.X - oldPosAfter.X
-        deltaY = newPos.Y - oldPosAfter.Y
-        deltaZ = newPos.Z - oldPosAfter.Z
-
-        droneObject.Pos.X += (deltaX)
-        droneObject.Pos.Y += (deltaY)
-        droneObject.Pos.Z += (deltaZ)
+    for i := 0; i < int(iterations); i++ {
+        droneObject.Pos.X += (deltaX) / iterations
+        droneObject.Pos.Y += (deltaY) / iterations
+        droneObject.Pos.Z += (deltaZ) / iterations
 
         time.Sleep(time.Duration(100000000))
         drone.DroneObject = droneObject
+    }
 
-        log.Println("DroneObject in moveDrone", droneObject)
+    oldPosAfter := droneObject.Pos
+    deltaX = newPos.X - oldPosAfter.X
+    deltaY = newPos.Y - oldPosAfter.Y
+    deltaZ = newPos.Z - oldPosAfter.Z
+
+    droneObject.Pos.X += (deltaX)
+    droneObject.Pos.Y += (deltaY)
+    droneObject.Pos.Z += (deltaZ)
+
+    time.Sleep(time.Duration(100000000))
+    drone.DroneObject = droneObject
+
+    log.Println("DroneObject in moveDrone", droneObject)
 }
-
-//func moveDrone(newPos Position, t float64) 
-//    log.Println("Moving to ", newPos)
-//    oldPos := droneObject.Pos
-//    for {
-//        if int(newPos.X) == int(droneObject.Pos.X) && int(newPos.Y) == int(droneObject.Pos.Y) && int(newPos.Z) == int(droneObject.Pos.Z) {
-//            break
-//        }
-//        if int(newPos.X) != int(droneObject.Pos.X) {
-//            droneObject.Pos.X += (newPos.X - oldPos.X) / t
-//        }
-//        if int(newPos.Y) != int(droneObject.Pos.Y) {
-//            droneObject.Pos.Y += (newPos.Y - oldPos.Y) / t
-//        }
-//        if int(newPos.Z) != int(droneObject.Pos.Z) {
-//            droneObject.Pos.Z += (newPos.Z - oldPos.Z) / t
-//        }
-//        time.Sleep(time.Duration(1000000000))
-//        drone.DroneObject = droneObject
-//    }
-//    log.Println("DroneObject in moveDrone", droneObject)
-//}
+func moveDrone(newPos Position, t float64) {
+    pathLockManager.request(PathLock{droneObject.Pos, newPos})
+    //move(newPos)
+}
 
 func heartbeat(w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -216,6 +197,7 @@ func handlePaxosMessage(w http.ResponseWriter, r *http.Request) {
         paxosClient.handlePaxosMessage(message)
     case 2:
         result := formPolygonPaxosClient.handlePaxosMessage(message)
+        log.Println("HAS RESULT" + result)
         if result != "" {
             log.Println("Handle Paxos Message result : " + result)
             instruction := MoveInstruction{}
@@ -256,4 +238,33 @@ func droneFormShape(w http.ResponseWriter, r *http.Request) {
     instruction.Positions[drone.ID] = positions[index]
     message := formPolygonPaxosClient.createPrepareMessage(toJsonString(instruction))
     formPolygonPaxosClient.sendPaxosMessage(message)
+}
+
+func handleMaekawaMessage(w http.ResponseWriter, r *http.Request) {
+    origSender := r.URL.Query().Get("origSender")
+    seqNum, _ := strconv.Atoi(r.URL.Query().Get("seqNum"))
+    dest := r.URL.Query().Get("dest")
+    msg := MaekawaMessage{}
+    getRequestBody(&msg, r)
+    //log.Println("Original " + msg.Type + " from " + origSender + " seq " + strconv.Itoa(seqNum))
+    _, seen := haveSeenMap[MulticastMsgKey{origSender, dest, msg.Type, seqNum}]
+    if !seen {
+        haveSeenMap[MulticastMsgKey{origSender, dest, msg.Type, seqNum}] = true
+        sendMulticast(DRONE_MAEKAWA_MESSAGE_URL, r.URL.Query(), msg)
+    }
+    _, handled := haveHandledMap[MulticastMsgKey{origSender, dest, msg.Type, seqNum}]
+    if strings.Compare(drone.ID, dest) == 0 && !handled {
+        haveHandledMap[MulticastMsgKey{origSender, dest, msg.Type, seqNum}] = true
+        log.Println("Received Maekawa Message " + msg.Type + " from " + origSender + " with seq " + strconv.Itoa(seqNum))
+        switch msg.Type {
+        case REQUEST:
+            pathLockManager.handleRequest(msg)
+        case RELEASE:
+            pathLockManager.handleRelease(msg)
+        case ACK:
+            pathLockManager.handleAck(msg)
+        case NACK:
+            handleNack(msg)
+        }
+    }
 }
