@@ -118,7 +118,7 @@ func randomPositions(w http.ResponseWriter, r *http.Request) {
     for _, drone := range droneMap {
         address := "http://" + drone.Address + DRONE_MOVE_TO_POSITION_URL
         x, y, z := getRandomCoordinates()
-        asyncGetRequest(address + "?X=" + x + "&Y=" + y + "&Z=" + z, "")
+        makeGetRequest(address + "?X=" + x + "&Y=" + y + "&Z=" + z, "")
     }
     w.Header().Set("Access-Control-Allow-Origin", "*")
 }
