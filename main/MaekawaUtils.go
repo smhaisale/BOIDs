@@ -18,6 +18,7 @@ var pathRequestQueue map[string]PathLock = make(map[string]PathLock)
 var myPathLock = PathLock{}
 var ackNo int = 0
 var seqNum = map[string]int{REQUEST:0, RELEASE:0, ACK:0, NACK:0}
+
 /*
 type PathLockManager struct {
 	permissionGroup []string
@@ -42,8 +43,6 @@ var RELEASE = "RELEASE"
 var ACK = "ACK"
 var NACK = "NACK"
 
-
-// not the swarm but all the drones
 func getDrones() []string{
 	keys := reflect.ValueOf(swarm).MapKeys()
 	drones := make([]string, len(keys))
@@ -54,7 +53,6 @@ func getDrones() []string{
 	return drones
 }
 
-// todo
 func formPermGroup() {
 	permissionGroup = getDrones()
 }
@@ -141,7 +139,6 @@ func handleRelease(msg MaekawaMessage) {
 func handleAck(msg MaekawaMessage) {
 	ackNo += 1
 	if ackNo >= len(permissionGroup) {
-		//move(pathLockManager.myPathLock.To, 5)
 		move(myPathLock.To)
 		release()
 	}
