@@ -113,8 +113,8 @@ func move(newPos Position) {
 }
 
 func moveDrone(newPos Position, t float64) {
-    request(PathLock{droneObject.Pos, newPos})
-    //move(newPos)
+    //request(PathLock{droneObject.Pos, newPos})
+    move(newPos)
 }
 
 func heartbeat(w http.ResponseWriter, r *http.Request) {
@@ -190,10 +190,10 @@ func addNewDroneToSwarm(w http.ResponseWriter, r *http.Request) {
         swarm[newDrone.ID] = newDrone
         for _, swarmDrone := range swarm {
             swarmDroneAddress := "http://" + swarmDrone.Address + DRONE_ADD_DRONE_URL + "?address=" + address
-            makeGetRequest(swarmDroneAddress, "")
-            makeGetRequest( "http://" + address + DRONE_ADD_DRONE_URL + "?address=" + swarmDrone.Address, "")
+            asyncGetRequest(swarmDroneAddress, "")
+            asyncGetRequest( "http://" + address + DRONE_ADD_DRONE_URL + "?address=" + swarmDrone.Address, "")
         }
-        makeGetRequest( "http://" + address + DRONE_ADD_DRONE_URL + "?address=" + drone.Address, "")
+        asyncGetRequest( "http://" + address + DRONE_ADD_DRONE_URL + "?address=" + drone.Address, "")
     }
 }
 
@@ -208,7 +208,7 @@ func deleteDroneFromSwarm(w http.ResponseWriter, r *http.Request) {
         delete(swarm, killDrone.ID)
         for _, swarmDrone := range swarm {
             swarmDroneAddress := "http://" + swarmDrone.Address + DRONE_KILL_DRONE_URL + "?address=" + address
-            makeGetRequest(swarmDroneAddress, "")
+            asyncGetRequest(swarmDroneAddress, "")
         }
     }
 }

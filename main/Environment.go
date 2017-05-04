@@ -73,8 +73,7 @@ func addDrone(w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Access-Control-Allow-Origin", "*")
 }
 
-func killDrone(w http.ResponseWriter, r *http.Request) {
-    droneId := r.URL.Query().Get("data")
+func kill(droneId string) {
     log.Println("Received kill drone request for " + droneId)
     address := droneMap[droneId].Address
     killDrone, err := getDroneFromServer(address)
@@ -88,6 +87,11 @@ func killDrone(w http.ResponseWriter, r *http.Request) {
             makeGetRequest(killDroneAddress, "")
         }
     }
+}
+
+func killDrone(w http.ResponseWriter, r *http.Request) {
+    droneId := r.URL.Query().Get("data")
+    kill(droneId)
     w.Header().Set("Access-Control-Allow-Origin", "*")
 }
 
@@ -96,7 +100,7 @@ func formPolygon(w http.ResponseWriter, r *http.Request) {
     size := r.URL.Query().Get("nodes")
     for _, drone := range droneMap {
         address := "http://" + drone.Address + DRONE_FORM_POLYGON_URL + "?size=" + size
-        makeGetRequest(address, "")
+        asyncGetRequest(address, "")
         break
     }
     w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -108,7 +112,7 @@ func formShape(w http.ResponseWriter, r *http.Request) {
     size := r.URL.Query().Get("nodes")
     for _, drone := range droneMap {
         address := "http://" + drone.Address + DRONE_FORM_SHAPE_URL + "?shape=" + shape + "&size=" + size
-        makeGetRequest(address, "")
+        asyncGetRequest(address, "")
         break
     }
     w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -128,7 +132,7 @@ func refreshDroneInfo() {
     for key, drone := range droneMap {
         drone, err := getDroneFromServer(drone.Address)
         if err != nil {
-            delete(droneMap, key)
+            kill(key)
             log.Println("Error in refreshDroneInfo()! ", err)
         } else {
             droneMap[key] = Drone{drone.ID, drone.Address, drone.DroneObject}
