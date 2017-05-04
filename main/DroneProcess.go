@@ -150,7 +150,6 @@ func moveToPosition(w http.ResponseWriter, r *http.Request) {
     y, _ := strconv.ParseFloat(values.Get("Y"), 64)
     z, _ := strconv.ParseFloat(values.Get("Z"), 64)
 
-	// todo make sure it works with Maekawa
 	// Somehow ensure that the path is free - move other drones out of the way
     /*
     for _, swarmDrone := range swarm {
@@ -255,8 +254,8 @@ func droneFormPolygon(w http.ResponseWriter, r *http.Request) {
 }
 
 func droneFormShape(w http.ResponseWriter, r *http.Request) {
-    log.Println("Received form polygon request at " + drone.ID)
     shape :=  r.URL.Query().Get("shape")
+    log.Println("Received form " + shape +  " request at " + drone.ID)
     size, err := strconv.Atoi(r.URL.Query().Get("size"))
     if err != nil {
         size = len(swarm) + 1
@@ -297,7 +296,7 @@ func handleMaekawaMessage(w http.ResponseWriter, r *http.Request) {
     _, handled := haveHandledMap[MulticastMsgKey{origSender, dest, msg.Type, seqNum}]
     if strings.Compare(drone.ID, dest) == 0 && !handled {
         haveHandledMap[MulticastMsgKey{origSender, dest, msg.Type, seqNum}] = true
-        log.Println("Received Maekawa Message " + msg.Type + " from " + origSender + " with seq " + strconv.Itoa(seqNum))
+        log.Println("Received Maekawa Message " + msg.Type + " from " + origSender + ". The message is " + toJsonString(msg))
         switch msg.Type {
         case REQUEST:
             handleRequest(msg)

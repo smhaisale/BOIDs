@@ -2,7 +2,6 @@ package main
 
 import (
 	"log"
-	"strconv"
 	"reflect"
 	"math"
 )
@@ -58,37 +57,42 @@ func formPermGroup() {
 }
 
 func request(path PathLock) {
+	log.Println("Request path ", toJsonString(path))
 	myPathLock = path
 	seqNum[REQUEST] += 1
 	formPermGroup()
 	for _, otherDroneId := range permissionGroup {
-		log.Println("Request seqNum " + strconv.Itoa(seqNum[REQUEST]))
+		//log.Println("Request seqNum " + strconv.Itoa(seqNum[REQUEST]))
 		reqMsg := MaekawaMessage{drone.ID, otherDroneId, REQUEST, path}
 		multicastMaekawa(drone.ID, otherDroneId, DRONE_MAEKAWA_MESSAGE_URL, reqMsg, seqNum[REQUEST])
 	}
 }
 
 func release() {
+	log.Println("Release path ", toJsonString(myPathLock))
 	ackNo = 0
 	seqNum[RELEASE] += 1
 	formPermGroup()
 	for _, otherDroneId := range permissionGroup {
-		log.Println("Release seqNum " + strconv.Itoa(seqNum[RELEASE]))
+		//log.Println("Release seqNum " + strconv.Itoa(seqNum[RELEASE]))
 		rlsMsg := MaekawaMessage{drone.ID, otherDroneId, RELEASE, myPathLock}
 		multicastMaekawa(drone.ID, otherDroneId, DRONE_MAEKAWA_MESSAGE_URL, rlsMsg, seqNum[RELEASE])
 	}
 }
 
 func ack(dest string) {
+	log.Println("Ack to ", dest)
+	log.Println()
 	seqNum[ACK] += 1
-	log.Println("Ack seqNum " + strconv.Itoa(seqNum[ACK]))
+	//log.Println("Ack seqNum " + strconv.Itoa(seqNum[ACK]))
 	ackMsg := MaekawaMessage{drone.ID, dest, ACK, PathLock{}}
 	multicastMaekawa(drone.ID, dest, DRONE_MAEKAWA_MESSAGE_URL, ackMsg, seqNum[ACK])
 }
 
 func nack(dest string) {
+	log.Println("Nack to ", dest)
 	seqNum[NACK] += 1
-	log.Println("Nack seqNum " + strconv.Itoa(seqNum[NACK]))
+	//log.Println("Nack seqNum " + strconv.Itoa(seqNum[NACK]))
 	nackMsg := MaekawaMessage{drone.ID, dest, NACK, PathLock{}}
 	multicastMaekawa(drone.ID, dest, DRONE_MAEKAWA_MESSAGE_URL, nackMsg, seqNum[NACK])
 }
