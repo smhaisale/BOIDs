@@ -128,6 +128,7 @@ func refreshDroneInfo() {
     for key, drone := range droneMap {
         drone, err := getDroneFromServer(drone.Address)
         if err != nil {
+            delete(droneMap, key)
             log.Println("Error in refreshDroneInfo()! ", err)
         } else {
             droneMap[key] = Drone{drone.ID, drone.Address, drone.DroneObject}
