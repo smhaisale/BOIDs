@@ -68,8 +68,9 @@ func main() {
 
     randomPosition := Position{rand.Float64() * 30 - 15, rand.Float64() * 20, rand.Float64() * 30 - 15}
     randomSpeed := Speed{rand.Float64() * 5, rand.Float64() * 5, rand.Float64() * 5}
+    randomColor := Position{rand.Float64() * 255, rand.Float64() * 255, rand.Float64() * 255}
 
-    droneObject = DroneObject{randomPosition, DroneType{"0", "normal", Dimensions{1, 2, 3}, Dimensions{1, 2, 3}, Speed{1, 2, 3}}, randomSpeed}
+    droneObject = DroneObject{randomPosition, DroneType{"0", "normal", Dimensions{1, 2, 3}, Dimensions{1, 2, 3}, Speed{1, 2, 3}}, randomSpeed, randomColor, 0.4 + rand.Float64() * 0.6}
     drone = Drone{droneId, "localhost:" + port, droneObject}
     // Start the environment server and log any errors
     log.Println("http server started on " + drone.Address)

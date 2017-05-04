@@ -26,11 +26,11 @@ function getRandomArbitrary(min, max) {
   return Math.floor(Math.random() * (max - min)) + min;
 }
 
-function createSphere(id, size, newX, newY, newZ) {
+function createSphere(id, size, newX, newY, newZ, r, g, b) {
 
-    var rValue = getRandomArbitrary(0,255);
-    var gValue = getRandomArbitrary(0,255);
-    var bValue = getRandomArbitrary(0,255);
+    var rValue = Math.floor(r);//getRandomArbitrary(0,255);
+    var gValue = Math.floor(g);//getRandomArbitrary(0,255);
+    var bValue = Math.floor(b);//getRandomArbitrary(0,255);
 
     /**
    var blueLightObj = Phoria.Entity.create({
@@ -277,11 +277,12 @@ function updateDronePositions() {
                 for (var i = 0; i < data.length; i++) {
                     var object = data[i];
                     if (mapSize <= i) {
-                        var drone = new Drone(object.ID, object.DroneObject.pos.X, object.DroneObject.pos.Y, object.DroneObject.pos.Z);
+                        var drone = new Drone(object.ID, object.DroneObject.pos.X, object.DroneObject.pos.Y, object.DroneObject.pos.Z, object.DroneObject.color.X, object.DroneObject.color.Y, object.DroneObject.color.Z, object.DroneObject.size);
                         var droneAddress = object.Address;
                         drone.address = droneAddress.substring(droneAddress.indexOf(':')+1);
                         console.log(drone.address);
-                        var sphere = createSphere(object.ID, drone.size, drone.currentX, drone.currentY, drone.currentZ);
+                        console.log(drone);
+                        var sphere = createSphere(object.ID, drone.size, drone.currentX, drone.currentY, drone.currentZ, drone.r, drone.g, drone.b);
                         //sphereList.push(sphere);
                         scene.graph.push(sphere);
 

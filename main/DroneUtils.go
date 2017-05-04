@@ -45,6 +45,8 @@ type DroneObject struct {
 	Pos   Position  `json:"pos"`
 	Type  DroneType `json:"type"`
 	Speed Speed     `json:"speed"`
+    Color Position  `json:"color"`
+    Size  float64  `json:"size"`
 }
 
 // System representation of a drone including ID, URL, paxos role etc.
@@ -67,9 +69,11 @@ var sampleSpeed = Speed{2, 1, -1}
 
 var sampleDimension = Dimensions{1, 1, 1}
 
+var sampleColor = Position{rand.Float64() * 255, rand.Float64() * 255, rand.Float64() * 255}
+
 var sampleDroneType = DroneType{"type1", "Simple sample drone type", sampleDimension, Dimensions{10, 10, 10}, Speed{10, 10, 10}}
 
-var sampleDroneObject = DroneObject{samplePosition, sampleDroneType, sampleSpeed}
+var sampleDroneObject = DroneObject{samplePosition, sampleDroneType, sampleSpeed, sampleColor, rand.Float64()}
 
 var sampleDrone = Drone{"drone1", "localhost:1111", sampleDroneObject}
 
