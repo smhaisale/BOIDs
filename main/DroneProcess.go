@@ -180,7 +180,10 @@ func addNewDroneToSwarm(w http.ResponseWriter, r *http.Request) {
         return
     }
     newDrone, err := getDroneFromServer(address)
-    if err != nil || swarm[newDrone.ID] == newDrone {
+    if swarm[newDrone.ID] == newDrone {
+        return
+    }
+    if err != nil {
         log.Println("Error! ", err)
         return
     } else {
