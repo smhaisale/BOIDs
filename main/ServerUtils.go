@@ -111,9 +111,9 @@ func asyncGetRequest(url string, data string) {
         resp, err := client.Do(req)
         if err != nil {
             log.Println("Error! ", err)
-            return
+        } else {
+            resp.Body.Close()
         }
-        defer resp.Body.Close()
     }(url)
 }
 

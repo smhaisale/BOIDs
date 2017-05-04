@@ -1,13 +1,16 @@
-function Drone(id, x, y, z) {
+function Drone(id, x, y, z, r, g, b, size) {
    this.ID;
    this.address;
-   this.size = 0.5 + 0.5 * Math.random();
    this.currentX = x;
    this.currentY = y;
    this.currentZ = z;
    this.newX = 0;
    this.newY = 0;
    this.newZ = 0;
+    this.r = r;
+    this.g = g;
+    this.b = b;
+    this.size = size;
    this.dX = 0;
    this.dY = 0;
    this.dZ = 0;

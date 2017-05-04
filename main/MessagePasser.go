@@ -26,22 +26,21 @@ func multicastMaekawa(origSender string, dest string, purposeUrl string, msg Mae
 	reqParam.Add("origSender", origSender)
 	reqParam.Add("dest", dest)
 	reqParam.Add("seqNum", strconv.Itoa(seqNum))
-	makeGetRequest("http://" + drone.Address + purposeUrl + "?" + reqParam.Encode(), toJsonString(msg))
-	//log.Println("Multicast Maekawa: " + drone.Address + "with Msg: " + toJsonString(msg))
+	asyncGetRequest("http://" + drone.Address + purposeUrl + "?" + reqParam.Encode(), toJsonString(msg))
+	//makeGetRequest("http://" + drone.Address + purposeUrl + "?" + reqParam.Encode(), toJsonString(msg))
 	for _, otherDrone := range swarm {
 		url := "http://" + otherDrone.Address + purposeUrl + "?" + reqParam.Encode()
-		makeGetRequest(url, toJsonString(msg))
-		//asyncGetRequest(url, toJsonString(msg))
+		//makeGetRequest(url, toJsonString(msg))
+		asyncGetRequest(url, toJsonString(msg))
 	}
 }
 
 // not origSender use this function
 func sendMulticast(purposeUrl string, reqParam url.Values, msg MaekawaMessage) {
-	//log.Println("Multicast Maekawa: " + drone.Address + "with Msg: " + toJsonString(msg))
 	makeGetRequest("http://" + drone.Address + purposeUrl + "?"+ reqParam.Encode(), toJsonString(msg))
 	for _, otherDrone := range swarm {
 		url := "http://" + otherDrone.Address + purposeUrl + "?"+ reqParam.Encode()
-		makeGetRequest(url, toJsonString(msg))
-		//asyncGetRequest(url, toJsonString(msg))
+		//makeGetRequest(url, toJsonString(msg))
+		asyncGetRequest(url, toJsonString(msg))
 	}
 }
