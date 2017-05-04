@@ -33,6 +33,7 @@ type MulticastMsgKey struct {
     Type       string
     SeqNum     int
 }
+
 var haveSeenMap map[MulticastMsgKey]bool = make(map[MulticastMsgKey]bool)
 var haveHandledMap map[MulticastMsgKey]bool = make(map[MulticastMsgKey]bool)
 var pathLockManager = PathLockManager{permissionGroup: make([]string, 0), currPathLockList: make(map[string]PathLock), pathRequestQueue: make(map[string]PathLock), myPathLock: PathLock{}, ackNo: 0, seqNum: map[string]int{REQUEST: 0, RELEASE: 0, ACK: 0, NACK: 0}}
@@ -70,7 +71,7 @@ func main() {
     randomSpeed := Speed{rand.Float64() * 5, rand.Float64() * 5, rand.Float64() * 5}
     randomColor := Position{rand.Float64() * 255, rand.Float64() * 255, rand.Float64() * 255}
 
-    droneObject = DroneObject{randomPosition, DroneType{"0", "normal", Dimensions{1, 2, 3}, Dimensions{1, 2, 3}, Speed{1, 2, 3}}, randomSpeed, randomColor, 0.4 + rand.Float64() * 0.6}
+    droneObject = DroneObject{randomPosition, DroneType{"0", "normal", Dimensions{1, 2, 3}, Dimensions{1, 2, 3}, Speed{1, 2, 3}}, randomSpeed, randomColor, 0.7 + rand.Float64() * 0.3}
     drone = Drone{droneId, "localhost:" + port, droneObject}
     // Start the environment server and log any errors
     log.Println("http server started on " + drone.Address)
@@ -112,6 +113,7 @@ func move(newPos Position) {
 
     log.Println("DroneObject in moveDrone", droneObject)
 }
+
 func moveDrone(newPos Position, t float64) {
     pathLockManager.request(PathLock{droneObject.Pos, newPos})
     //move(newPos)
@@ -152,6 +154,7 @@ func moveToPosition(w http.ResponseWriter, r *http.Request) {
 
 	// todo make sure it works with Maekawa
 	// Somehow ensure that the path is free - move other drones out of the way
+    /*
     for _, swarmDrone := range swarm {
         flagY, flagZ := false, false
         deltaX := x - droneObject.Pos.X
@@ -168,6 +171,7 @@ func moveToPosition(w http.ResponseWriter, r *http.Request) {
             makeGetRequest("http://" + url, "")
         }
     }
+    */
 
     moveDrone(Position{x, y, z}, 20)
 }
