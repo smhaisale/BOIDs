@@ -200,15 +200,11 @@ func addNewDroneToSwarm(w http.ResponseWriter, r *http.Request) {
 func deleteDroneFromSwarm(w http.ResponseWriter, r *http.Request) {
     address := r.URL.Query() .Get("address")
     log.Println("Received kill drone request at address " + address)
-    killDrone, err := getDroneFromServer(address)
-    if err != nil {
-        log.Println("Error! ", err)
-        return
-    } else {
-        delete(swarm, killDrone.ID)
-        for _, swarmDrone := range swarm {
-            swarmDroneAddress := "http://" + swarmDrone.Address + DRONE_KILL_DRONE_URL + "?address=" + address
-            asyncGetRequest(swarmDroneAddress, "")
+
+    for _, swarmDrone := range swarm {
+        if swarmDrone.Address == address {
+            delete(swarm, swarmDrone.ID)
+            break
         }
     }
 }
