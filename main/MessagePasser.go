@@ -28,9 +28,13 @@ func multicastMaekawa(origSender string, dest string, purposeUrl string, msg Mae
 	reqParam.Add("seqNum", strconv.Itoa(seqNum))
 	//asyncGetRequest("http://" + drone.Address + purposeUrl + "?" + reqParam.Encode(), toJsonString(msg))
 	makeGetRequest("http://" + drone.Address + purposeUrl + "?" + reqParam.Encode(), toJsonString(msg))
+
 	for _, otherDrone := range swarm {
 		url := "http://" + otherDrone.Address + purposeUrl + "?" + reqParam.Encode()
-		makeGetRequest(url, toJsonString(msg))
+		_, err := makeGetRequest(url, toJsonString(msg))
+		if err != nil {
+			delete(swarm, otherDrone.ID)
+		}
 		//asyncGetRequest(url, toJsonString(msg))
 	}
 }
