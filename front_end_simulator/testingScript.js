@@ -269,14 +269,10 @@ function updateDronePositions() {
             url: 'http://' + document.location.hostname + ':18842/getAllDrones',
             success: function (data) {
                 console.log(data);
-                var mapSize = 0, key;
-                for (key in droneMap) {
-                    if (droneMap.hasOwnProperty(key)) mapSize++;
-                }
 
                 for (var i = 0; i < data.length; i++) {
                     var object = data[i];
-                    if (mapSize <= i) {
+                    if (!droneMap.hasOwnProperty(object.ID)) {
                         var drone = new Drone(object.ID, object.DroneObject.pos.X, object.DroneObject.pos.Y, object.DroneObject.pos.Z, object.DroneObject.color.X, object.DroneObject.color.Y, object.DroneObject.color.Z, object.DroneObject.size);
                         var droneAddress = object.Address;
                         drone.address = droneAddress.substring(droneAddress.indexOf(':')+1);
