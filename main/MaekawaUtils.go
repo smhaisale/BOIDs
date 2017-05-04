@@ -154,7 +154,7 @@ func handleNack(msg MaekawaMessage) {
 }
 
 func isIntersect(path1 PathLock, path2 PathLock) bool {
-	return (dist3D_Segment_to_Segment(path1, path2) <= 2)
+	return (dist3D_Segment_to_Segment(path1, path2) <= 0)
 }
 
 func dist3D_Segment_to_Segment(path1 PathLock, path2 PathLock) float64 {
