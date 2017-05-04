@@ -75,12 +75,14 @@ func addDrone(w http.ResponseWriter, r *http.Request) {
 
 func kill(droneId string) {
     log.Println("Received kill drone request for " + droneId)
-    address := droneMap[droneId].Address
-    killDrone, _ := getDroneFromServer(address)
-    delete(droneMap, killDrone.ID)
-    for _, swarmDrone := range droneMap {
-        killDroneAddress := "http://" + swarmDrone.Address + DRONE_KILL_DRONE_URL + "?address=" + address
-        makeGetRequest(killDroneAddress, "")
+    if _, ok := droneMap[droneId]; ok {
+        address := droneMap[droneId].Address
+        //killDrone, _ := getDroneFromServer(address)
+        delete(droneMap, droneId)
+        for _, swarmDrone := range droneMap {
+            killDroneAddress := "http://" + swarmDrone.Address + DRONE_KILL_DRONE_URL + "?address=" + address
+            makeGetRequest(killDroneAddress, "")
+        }
     }
 }
 
