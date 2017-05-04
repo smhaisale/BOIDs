@@ -109,6 +109,7 @@ func (pathLockManager *PathLockManager) handleRequest(msg MaekawaMessage) {
 	for _, pathLock := range pathLockManager.currPathLockList {
 		if isIntersect(path, pathLock) {
 			hasIntersect = true
+			log.Println("Path Lock Intersection! ", path, pathLock)
 			break
 		}
 	}

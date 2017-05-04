@@ -62,6 +62,7 @@ func addDrone(w http.ResponseWriter, r *http.Request) {
     drone, err := getDroneFromServer(address)
     if err != nil {
         log.Println("Error! ", err)
+
     } else {
         droneMap[drone.ID] = Drone{drone.ID, address, drone.DroneObject}
         for _, swarmDrone := range droneMap {
