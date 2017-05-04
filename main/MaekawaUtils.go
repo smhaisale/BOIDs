@@ -5,7 +5,6 @@ import (
 	"strconv"
 	"reflect"
 	"math"
-	"sync"
 )
 
 type PathLock struct {
@@ -13,12 +12,13 @@ type PathLock struct {
 	To   Position
 }
 
-//var permissionGroup []string = make([]string, len(swarm))
-//var currPathLockList map[string]PathLock = make(map[string]PathLock)
-//var pathRequestQueue map[string]PathLock = make(map[string]PathLock)
-//var myPathLock PathLock
-//var ackNo int
-
+var permissionGroup []string = make([]string, 0)
+var currPathLockList map[string]PathLock = make(map[string]PathLock)
+var pathRequestQueue map[string]PathLock = make(map[string]PathLock)
+var myPathLock = PathLock{}
+var ackNo int = 0
+var seqNum = map[string]int{REQUEST:0, RELEASE:0, ACK:0, NACK:0}
+/*
 type PathLockManager struct {
 	permissionGroup []string
 	currPathLockList map[string]PathLock
@@ -28,12 +28,13 @@ type PathLockManager struct {
 	seqNum map[string]int
 	mux sync.Mutex
 }
+*/
 
 type MaekawaMessage struct {
-	Source      string
-	Destination string
-	Type        string
-	Path        PathLock
+	Source      string	`json: "source"`
+	Destination string	`json: "dest"`
+	Type        string	`json: "type"`
+	Path        PathLock	`json: "path"`
 }
 
 var REQUEST = "REQUEST"
@@ -54,119 +55,94 @@ func getDrones() []string{
 }
 
 // todo
-func (pathLockManager *PathLockManager) formPermGroup() {
-	pathLockManager.permissionGroup = getDrones()
+func formPermGroup() {
+	permissionGroup = getDrones()
 }
 
-func (pathLockManager *PathLockManager) request(path PathLock) {
-	pathLockManager.mux.Lock()
-	pathLockManager.myPathLock = path
-	pathLockManager.seqNum[REQUEST] += 1
-	pathLockManager.formPermGroup()
-	pathLockManager.mux.Unlock()
-	for _, otherDroneId := range pathLockManager.permissionGroup {
-		log.Println("Request seqNum " + strconv.Itoa(pathLockManager.seqNum[REQUEST]))
+func request(path PathLock) {
+	myPathLock = path
+	seqNum[REQUEST] += 1
+	formPermGroup()
+	for _, otherDroneId := range permissionGroup {
+		log.Println("Request seqNum " + strconv.Itoa(seqNum[REQUEST]))
 		reqMsg := MaekawaMessage{drone.ID, otherDroneId, REQUEST, path}
-		multicastMaekawa(drone.ID, otherDroneId, DRONE_MAEKAWA_MESSAGE_URL, reqMsg, pathLockManager.seqNum[REQUEST])
+		multicastMaekawa(drone.ID, otherDroneId, DRONE_MAEKAWA_MESSAGE_URL, reqMsg, seqNum[REQUEST])
 	}
 }
 
-func (pathLockManager *PathLockManager) release() {
-	pathLockManager.mux.Lock()
-	pathLockManager.ackNo = 0
-	pathLockManager.seqNum[RELEASE] += 1
-	pathLockManager.mux.Unlock()
-	for _, otherDroneId := range pathLockManager.permissionGroup {
-		log.Println("Release seqNum " + strconv.Itoa(pathLockManager.seqNum[RELEASE]))
-		rlsMsg := MaekawaMessage{drone.ID, otherDroneId, RELEASE, pathLockManager.myPathLock}
-		multicastMaekawa(drone.ID, otherDroneId, DRONE_MAEKAWA_MESSAGE_URL, rlsMsg, pathLockManager.seqNum[RELEASE])
+func release() {
+	ackNo = 0
+	seqNum[RELEASE] += 1
+	formPermGroup()
+	for _, otherDroneId := range permissionGroup {
+		log.Println("Release seqNum " + strconv.Itoa(seqNum[RELEASE]))
+		rlsMsg := MaekawaMessage{drone.ID, otherDroneId, RELEASE, myPathLock}
+		multicastMaekawa(drone.ID, otherDroneId, DRONE_MAEKAWA_MESSAGE_URL, rlsMsg, seqNum[RELEASE])
 	}
 }
 
-func (pathLockManager *PathLockManager) ack(dest string) {
-	pathLockManager.mux.Lock()
-	pathLockManager.seqNum[ACK] += 1
-	pathLockManager.mux.Unlock()
-	log.Println("Ack seqNum " + strconv.Itoa(pathLockManager.seqNum[ACK]))
+func ack(dest string) {
+	seqNum[ACK] += 1
+	log.Println("Ack seqNum " + strconv.Itoa(seqNum[ACK]))
 	ackMsg := MaekawaMessage{drone.ID, dest, ACK, PathLock{}}
-	multicastMaekawa(drone.ID, dest, DRONE_MAEKAWA_MESSAGE_URL, ackMsg, pathLockManager.seqNum[ACK])
+	multicastMaekawa(drone.ID, dest, DRONE_MAEKAWA_MESSAGE_URL, ackMsg, seqNum[ACK])
 }
 
-func (pathLockManager *PathLockManager) nack(dest string) {
-	pathLockManager.mux.Lock()
-	pathLockManager.seqNum[NACK] += 1
-	pathLockManager.mux.Unlock()
-	log.Println("Nack seqNum " + strconv.Itoa(pathLockManager.seqNum[NACK]))
+func nack(dest string) {
+	seqNum[NACK] += 1
+	log.Println("Nack seqNum " + strconv.Itoa(seqNum[NACK]))
 	nackMsg := MaekawaMessage{drone.ID, dest, NACK, PathLock{}}
-	multicastMaekawa(drone.ID, dest, DRONE_MAEKAWA_MESSAGE_URL, nackMsg, pathLockManager.seqNum[NACK])
+	multicastMaekawa(drone.ID, dest, DRONE_MAEKAWA_MESSAGE_URL, nackMsg, seqNum[NACK])
 }
 
-func (pathLockManager *PathLockManager) handleRequest(msg MaekawaMessage) {
-	pathLockManager.mux.Lock()
+func handleRequest(msg MaekawaMessage) {
 	source := msg.Source
 	path := msg.Path
 	hasIntersect := false
-	for _, pathLock := range pathLockManager.currPathLockList {
+	for _, pathLock := range currPathLockList {
 		if isIntersect(path, pathLock) {
 			hasIntersect = true
 			break
 		}
 	}
 	if hasIntersect {
-		pathLockManager.pathRequestQueue[source] = path
-		//nack(source)
+		pathRequestQueue[source] = path
+		nack(source)
 	} else {
-		pathLockManager.currPathLockList[source] = path
-		//ack(source)
-	}
-	pathLockManager.mux.Unlock()
-	if hasIntersect {
-		pathLockManager.nack(source)
-	} else {
-		pathLockManager.ack(source)
+		currPathLockList[source] = path
+		ack(source)
 	}
 }
 
-func (pathLockManager *PathLockManager) handleRelease(msg MaekawaMessage) {
-	pathLockManager.mux.Lock()
+func handleRelease(msg MaekawaMessage) {
 	source := msg.Source
-	_, exist := pathLockManager.currPathLockList[source]
+	_, exist := currPathLockList[source]
 	if exist {
-		delete(pathLockManager.currPathLockList, source)
+		delete(currPathLockList, source)
 	}
-	var rlsSource []string
-	for reqSource, reqPathLock := range pathLockManager.pathRequestQueue {
+	for reqSource, reqPathLock := range pathRequestQueue {
 		hasIntersect := false
-		for _, currPathLock := range pathLockManager.currPathLockList {
+		for _, currPathLock := range currPathLockList {
 			if isIntersect(reqPathLock, currPathLock) {
 				hasIntersect = true
 				break
 			}
 		}
 		if !hasIntersect {
-			pathLockManager.currPathLockList[reqSource] = reqPathLock
-			delete(pathLockManager.pathRequestQueue, reqSource)
-			rlsSource = append(rlsSource, reqSource)
-			//pathLockManager.ack(reqSource)
+			currPathLockList[reqSource] = reqPathLock
+			delete(pathRequestQueue, reqSource)
+			ack(reqSource)
 			break;
 		}
 	}
-	pathLockManager.mux.Unlock()
-	for _, src := range rlsSource {
-		pathLockManager.ack(src)
-	}
 }
 
-func (pathLockManager *PathLockManager) handleAck(msg MaekawaMessage) {
-	pathLockManager.mux.Lock()
-	pathLockManager.ackNo += 1
-	if pathLockManager.ackNo >= len(pathLockManager.permissionGroup) {
+func handleAck(msg MaekawaMessage) {
+	ackNo += 1
+	if ackNo >= len(permissionGroup) {
 		//move(pathLockManager.myPathLock.To, 5)
-		move(pathLockManager.myPathLock.To)
-	}
-	pathLockManager.mux.Unlock()
-	if pathLockManager.ackNo >= len(pathLockManager.permissionGroup) {
-		pathLockManager.release()
+		move(myPathLock.To)
+		release()
 	}
 
 }

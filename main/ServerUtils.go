@@ -41,10 +41,11 @@ func getRequestBody(msg interface {}, req *http.Request) interface{} {
     if err != nil {
         panic(err)
     }
-    log.Println(string(body))
+    //log.Println(string(body))
     err = json.Unmarshal(body, msg)
     if err != nil {
         log.Printf("error: %v", err)
+        return err
     }
     defer req.Body.Close()
     return msg
@@ -62,6 +63,7 @@ func getResponseBody(msg interface {}, resp *http.Response) error {
     err = json.Unmarshal(body, msg)
     if err != nil {
         log.Printf("error: %v", err)
+        return err
     }
     defer resp.Body.Close()
     return err
@@ -87,7 +89,7 @@ func addDroneToServer(droneId string, droneAddress string) error {
 
 // Takes a URL and does a GET request with request body as the provided data. Returns response as a json string.
 func makeGetRequest(url string, data string) (string, error) {
-    log.Println("Make GET request to " + url + " with data " + data)
+    //log.Println("Make GET request to " + url + " with data " + data)
     req, err := http.NewRequest("GET", url, bytes.NewBufferString(data))
     if err != nil {
         return "", err
@@ -109,8 +111,9 @@ func asyncGetRequest(url string, data string) {
         resp, err := client.Do(req)
         if err != nil {
             log.Println("Error! ", err)
+            return
         }
-        resp.Body.Close()
+        defer resp.Body.Close()
     }(url)
 }
 

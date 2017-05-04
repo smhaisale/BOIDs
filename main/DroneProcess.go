@@ -35,8 +35,6 @@ type MulticastMsgKey struct {
 }
 var haveSeenMap map[MulticastMsgKey]bool = make(map[MulticastMsgKey]bool)
 var haveHandledMap map[MulticastMsgKey]bool = make(map[MulticastMsgKey]bool)
-var pathLockManager = PathLockManager{permissionGroup: make([]string, 0), currPathLockList: make(map[string]PathLock), pathRequestQueue: make(map[string]PathLock), myPathLock: PathLock{}, ackNo: 0, seqNum: map[string]int{REQUEST: 0, RELEASE: 0, ACK: 0, NACK: 0}}
-
 
 type MoveInstruction struct {
     Positions map[string]Position
@@ -112,7 +110,7 @@ func move(newPos Position) {
     log.Println("DroneObject in moveDrone", droneObject)
 }
 func moveDrone(newPos Position, t float64) {
-    pathLockManager.request(PathLock{droneObject.Pos, newPos})
+    request(PathLock{droneObject.Pos, newPos})
     //move(newPos)
 }
 
@@ -297,11 +295,11 @@ func handleMaekawaMessage(w http.ResponseWriter, r *http.Request) {
         log.Println("Received Maekawa Message " + msg.Type + " from " + origSender + " with seq " + strconv.Itoa(seqNum))
         switch msg.Type {
         case REQUEST:
-            pathLockManager.handleRequest(msg)
+            handleRequest(msg)
         case RELEASE:
-            pathLockManager.handleRelease(msg)
+            handleRelease(msg)
         case ACK:
-            pathLockManager.handleAck(msg)
+            handleAck(msg)
         case NACK:
             handleNack(msg)
         }
