@@ -53,13 +53,13 @@ func getRequestBody(msg interface {}, req *http.Request) interface{} {
 
 func getResponseBody(msg interface {}, resp *http.Response) error {
 
-    log.Println(resp)
+    //log.Println(resp)
 
     body, err := ioutil.ReadAll(resp.Body)
     if err != nil {
         panic(err)
     }
-    log.Println(string(body))
+    //log.Println(string(body))
     err = json.Unmarshal(body, msg)
     if err != nil {
         log.Printf("error: %v", err)
